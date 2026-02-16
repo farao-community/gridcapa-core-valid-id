@@ -9,6 +9,7 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.CoreValidIntradayInvalidDataException;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 
 import java.io.InputStream;
@@ -22,13 +23,22 @@ public final class CnecRamImporter {
         // utility class
     }
 
+    private static final JAXBContext JAXB_CONTEXT = initJaxbContext();
+
     public static FlowBasedDomainDocument importCnecRam(final InputStream inputStream) {
         try {
-            final JAXBContext context = JAXBContext.newInstance(FlowBasedDomainDocument.class);
-            final Unmarshaller unmarshaller = context.createUnmarshaller();
+            final Unmarshaller unmarshaller = JAXB_CONTEXT.createUnmarshaller();
             return (FlowBasedDomainDocument) unmarshaller.unmarshal(inputStream);
         } catch (final Exception e) {
             throw new CoreValidIntradayInvalidDataException("Cannot unmarshal FlowBasedDomainDocument", e);
+        }
+    }
+
+    private static JAXBContext initJaxbContext() {
+        try {
+            return JAXBContext.newInstance(FlowBasedDomainDocument.class);
+        } catch (JAXBException e) {
+            throw new ExceptionInInitializerError(e);
         }
     }
 }
