@@ -20,7 +20,7 @@ class CnecRamBranchDataTest {
 
     @Test
     void testCnecRamBranchData() {
-        Map<String, BigDecimal> ptdfs = Map.of("AA", new BigDecimal(0.00123), "BB", new BigDecimal(0.00456), "CC", new BigDecimal(0.00789));
+        Map<String, BigDecimal> ptdfs = Map.of("AA", BigDecimal.valueOf(0.00123), "BB", BigDecimal.valueOf(0.00456), "CC", BigDecimal.valueOf(0.00789));
         CnecRamBranchData cnecRamBranchData = new CnecRamBranchData(TEST_ID, RAM_0_CORE, AMR, ptdfs);
         Assertions.assertThat(cnecRamBranchData).isNotNull();
         Assertions.assertThat(cnecRamBranchData.branchId())
