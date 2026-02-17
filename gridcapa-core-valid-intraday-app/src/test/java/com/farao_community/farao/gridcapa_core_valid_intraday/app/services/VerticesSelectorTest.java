@@ -9,6 +9,8 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHub;
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsConfiguration;
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
+import com.powsybl.iidm.network.Country;
+import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceExchangeData;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.junit.jupiter.api.Test;
@@ -66,8 +68,8 @@ class VerticesSelectorTest {
         }
 
         @Override
-        public double getGlobalNetPosition(final String area) {
-            return (area.equals("AA") || area.equals("CC")) ? -300.0 : 600.0;
+        public double getGlobalNetPosition(final EICode area) {
+            return (area.equals(new EICode(Country.FR)) || area.equals(new EICode(Country.BE))) ? -300.0 : 600.0;
         }
     }
 
@@ -79,9 +81,9 @@ class VerticesSelectorTest {
         @Override
         public List<CoreHub> getCoreHubs() {
             return List.of(
-                new CoreHub("Test1", "ram1", "fb1", "AA", "AA", false, false, 1),
-                new CoreHub("Test2", "ram2", "fb2", "BB", "BB", false, false, 1),
-                new CoreHub("Test3", "ram3", "fb3", "CC", "CC", false, false, 1)
+                new CoreHub("Test1", "ram1", "fb1", "FR-CORE", "AA", false, 1),
+                new CoreHub("Test2", "ram2", "fb2", "DE-CORE", "BB", false, 1),
+                new CoreHub("Test3", "ram3", "fb3", "BE-CORE", "CC", false, 1)
             );
         }
     }
