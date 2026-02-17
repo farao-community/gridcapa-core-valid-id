@@ -6,8 +6,11 @@
  */
 package com.farao_community.farao.gridcapa_core_valid_intraday.app;
 
+import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsConfiguration;
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
+import com.farao_community.farao.gridcapa_core_valid_commons.vertex.VerticesUtils;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayRequest;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.CnecRamMapper;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.FileImporter;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
@@ -39,11 +42,13 @@ public class CoreValidIntradayHandler {
     private final Logger eventsLogger;
     private final FileImporter fileImporter;
     private final MinioAdapter minioAdapter;
+    private final CoreHubsConfiguration coreHubsConfiguration;
 
-    public CoreValidIntradayHandler(final FileImporter fileImporter, final MinioAdapter minioAdapter, final Logger eventsLogger) {
+    public CoreValidIntradayHandler(final FileImporter fileImporter, final MinioAdapter minioAdapter, final Logger eventsLogger, final CoreHubsConfiguration coreHubsConfiguration) {
         this.fileImporter = fileImporter;
         this.minioAdapter = minioAdapter;
         this.eventsLogger = eventsLogger;
+        this.coreHubsConfiguration = coreHubsConfiguration;
     }
 
     public String handleCoreValidIntradayRequest(final CoreValidIntradayRequest coreValidIntradayRequest) {
@@ -51,7 +56,7 @@ public class CoreValidIntradayHandler {
         final OffsetDateTime targetProcessDateTime = coreValidIntradayRequest.getTimestamp();
         final String formattedTimestamp = TIMESTAMP_FORMATTER.format(targetProcessDateTime);
         //TODO import stuff
-        final FlowBasedDomainDocument flowBasedDomainDocument = fileImporter.importCnecRamFile(coreValidIntradayRequest.getCnecRam());
+        final FlowBasedDomainDocument flowBasedDomainCnecRam = fileImporter.importCnecRamFile(coreValidIntradayRequest.getCnecRam());
         final List<Vertex> importedVertices = fileImporter.importVertices(coreValidIntradayRequest.getVertices());
         final Network network = fileImporter.importNetwork(coreValidIntradayRequest.getCgm());
         final GlskDocument glskDocument = fileImporter.importGlskFile(coreValidIntradayRequest.getGlsk());
@@ -62,6 +67,7 @@ public class CoreValidIntradayHandler {
                 : Map.of();
 
         //TODO calculate IVA stuff
+        List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam), coreHubsConfiguration.getCoreHubs());
 
         //TODO output IVAs
         return coreValidIntradayRequest.getId();
