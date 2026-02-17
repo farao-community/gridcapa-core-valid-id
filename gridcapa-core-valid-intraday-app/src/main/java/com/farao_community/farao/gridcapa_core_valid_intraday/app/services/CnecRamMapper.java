@@ -39,7 +39,7 @@ public final class CnecRamMapper {
 
     private static @NotNull CnecRamBranchData getCnecRamBranchData(final ConstResultType constResultType) {
         final Map<String, BigDecimal> ptdfs = new HashMap<>();
-        constResultType.getPtdfs().getPtdf().forEach(p -> ptdfs.put(p.getHub().getName(), new BigDecimal(p.getValue())));
+        constResultType.getPtdfs().getPtdf().forEach(p -> ptdfs.put(p.getHub().getName(), BigDecimal.valueOf(p.getValue())));
         final CriticalBranchType cb = constResultType.getCriticalBranch();
         return new CnecRamBranchData(cb.getId(), getIntValue(cb.getRAM0Core()), getIntValue(cb.getAmr()), ptdfs);
     }
