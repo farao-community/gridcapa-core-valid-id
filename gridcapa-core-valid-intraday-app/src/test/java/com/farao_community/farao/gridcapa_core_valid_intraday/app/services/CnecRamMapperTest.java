@@ -30,8 +30,9 @@ class CnecRamMapperTest {
         final FlowBasedDomainDocument flowBasedDomainDocument = fileImporter.importCnecRamFile(cnecRamFile);
         Assertions.assertThat(flowBasedDomainDocument).isNotNull();
         final List<CnecRamBranchData> cnecRamBranchData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainDocument);
-        Assertions.assertThat(cnecRamBranchData).isNotEmpty();
-        Assertions.assertThat(cnecRamBranchData).hasSize(1);
+        Assertions.assertThat(cnecRamBranchData)
+                .isNotEmpty()
+                .hasSize(1);
         final CnecRamBranchData cnecRamBranchDataFirst = cnecRamBranchData.getFirst();
         Assertions.assertThat(cnecRamBranchDataFirst.amr())
                 .isEqualTo(cnecRamBranchDataFirst.getAmr())
