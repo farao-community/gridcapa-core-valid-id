@@ -132,11 +132,11 @@ public class VerticesSelector {
         switch (hubForecastCode) {
             case "AT-CORE" : country = Country.AT;
                 break;
-            case "ALBE-CORE" : case "BE-CORE" : country =  Country.BE;
+            case "ALBE-CORE", "BE-CORE" : country =  Country.BE;
                 break;
             case "CZ-CORE" : country =  Country.CZ;
                 break;
-            case "ALDE-CORE" : case "DE-CORE" : country = Country.DE;
+            case "ALDE-CORE", "DE-CORE" : country = Country.DE;
                 break;
             case "FR-CORE" : country =  Country.FR;
                 break;

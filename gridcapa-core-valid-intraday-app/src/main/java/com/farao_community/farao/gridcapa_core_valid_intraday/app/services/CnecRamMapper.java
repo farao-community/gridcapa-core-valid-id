@@ -45,10 +45,9 @@ public final class CnecRamMapper {
     }
 
     private static int getIntValue(final Float nullableFloatValue) {
-        final int intValue = nullableFloatValue != null
+        return nullableFloatValue != null
                 ? nullableFloatValue.intValue()
                 : 0;
-        return intValue;
     }
 
 }
