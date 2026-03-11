@@ -17,6 +17,7 @@ import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import com.powsybl.glsk.api.GlskDocument;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.crac.io.fbconstraint.FbConstraintCreationContext;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.slf4j.Logger;
@@ -63,10 +64,14 @@ public class CoreValidIntradayHandler {
         final Network network = fileImporter.importNetwork(coreValidIntradayRequest.getCgm());
         final GlskDocument glskDocument = fileImporter.importGlskFile(coreValidIntradayRequest.getGlsk());
         final FbConstraintCreationContext fbConstraintCreationContext = fileImporter.importMergedCnec(coreValidIntradayRequest.getMergedCnec(), network, targetProcessDateTime);
-        final ReferenceProgram marketPoints = coreValidIntradayRequest.getOcappiMarketPoint() != null
-                ? fileImporter.importAggregatedScheduleFile(coreValidIntradayRequest.getOcappiMarketPoint(), targetProcessDateTime)
-                : fileImporter.importReferenceProgram(coreValidIntradayRequest.getMarketPoint(), targetProcessDateTime);
-
+        final ReferenceProgram marketPoints = fileImporter.importReferenceProgram(coreValidIntradayRequest.getMarketPoint(), targetProcessDateTime);
+        if (coreValidIntradayRequest.getOcappiMarketPoint() != null) {
+            marketPoints.getAllGlobalNetPositions()
+                    .put(new EICode("10YFR-RTE------C"),
+                         fileImporter.importAggregatedScheduleFile(coreValidIntradayRequest.getOcappiMarketPoint(),
+                                                                   targetProcessDateTime)
+                                 .doubleValue());
+        }
         //TODO calculate IVA stuff
         List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam), coreHubsConfiguration.getCoreHubs());
         VerticesSelector verticesSelector = new VerticesSelector(coreHubsConfiguration);
