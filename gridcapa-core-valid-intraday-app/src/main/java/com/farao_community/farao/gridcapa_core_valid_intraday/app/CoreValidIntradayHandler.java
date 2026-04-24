@@ -10,6 +10,7 @@ import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsCo
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.VerticesUtils;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayRequest;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRamBranchData;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.CnecRamMapper;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.FileImporter;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.VerticesSelector;
@@ -73,7 +74,8 @@ public class CoreValidIntradayHandler {
                                  .doubleValue());
         }
         //TODO calculate IVA stuff
-        List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam), coreHubsConfiguration.getCoreHubs());
+        final List<CnecRamBranchData> branchesData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam);
+        List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, branchesData, coreHubsConfiguration.getCoreHubs());
         VerticesSelector verticesSelector = new VerticesSelector(coreHubsConfiguration);
         final List<Vertex> vertices = verticesSelector.selectVerticesWithinNSphere(projectedVertices, marketPoints, SELECTED_CONTROL_ZONE_SIZE, MAX_SELECTED_VERTICES);
 
