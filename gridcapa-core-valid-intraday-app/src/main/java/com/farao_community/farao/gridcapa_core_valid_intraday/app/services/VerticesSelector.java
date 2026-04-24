@@ -7,14 +7,23 @@
 package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHub;
+import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubUtils;
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsConfiguration;
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
+import com.farao_community.farao.gridcapa_core_valid_commons.vertex.VerticesUtils;
+import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.CoreValidIntradayInvalidDataException;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRamBranchData;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecVertexRam;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +90,45 @@ public class VerticesSelector {
             .map(Pair::getLeft)
             .toList();
 
+    }
+
+    /**
+     *
+     * @param vertices              all considered vertices
+     * @param cnecRamBranchDatas    all considered CNECs
+     * @param nbVertices            the maximum number of constrained vertices to return
+     * @return the list of constrained vertices with the most constrained CNEC and its calculated constrained RAM
+     */
+    public List<CnecVertexRam> selectConstrainedVertices(final List<Vertex> vertices,
+                                                         final List<CnecRamBranchData> cnecRamBranchDatas,
+                                                         final int nbVertices) {
+
+        final Map<String, String> flowBasedToVertexCodeMap = CoreHubUtils.getFlowBasedToVertexCodeMap(coreHubs);
+        final List<CnecVertexRam> constrainedOrderedVertices = new ArrayList<>();
+        for (final Vertex vertex : vertices) {
+            final List<CnecVertexRam> vertexRamsByCnec = new ArrayList<>();
+            for (final CnecRamBranchData branch : cnecRamBranchDatas) {
+                final BigDecimal cnecVertexFlow = VerticesUtils.f0Core(vertex, branch, flowBasedToVertexCodeMap);
+                if (cnecVertexFlow.compareTo(BigDecimal.ZERO) > 0) {
+                    final BigDecimal cnecVerticeRam = BigDecimal.valueOf(branch.getRam0Core()).subtract(cnecVertexFlow);
+                    vertexRamsByCnec.add(new CnecVertexRam(branch, vertex, cnecVerticeRam.setScale(0, RoundingMode.HALF_EVEN).intValue()));
+                }
+            }
+            //for a given vertex get the lowest ram giving the most constrained CNEC
+            constrainedOrderedVertices.add(vertexRamsByCnec.stream()
+                                                           .sorted(Comparator.comparingInt(CnecVertexRam::ram))
+                                                           .findFirst()
+                                                           .orElseThrow(
+                                                               () -> new CoreValidIntradayInvalidDataException(
+                                                                       String.format("Impossible to find worse CNEC for vertex id %s", vertex.vertexId())
+                                                               )
+                                                           )
+            );
+        }
+        return constrainedOrderedVertices.stream()
+                                         .sorted(Comparator.comparingInt(CnecVertexRam::ram))
+                                         .limit(nbVertices)
+                                         .toList();
     }
 
     /**
