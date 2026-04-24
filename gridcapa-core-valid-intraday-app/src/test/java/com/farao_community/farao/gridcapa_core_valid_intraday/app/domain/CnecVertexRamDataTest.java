@@ -20,7 +20,7 @@ class CnecVertexRamDataTest {
 
     @Test
     void testCnecVertexRamData() {
-        final CnecRamBranchData cnec = new CnecRamBranchData("id", 145, 257 , Map.of("AB", BigDecimal.valueOf(1,2345), "CD", BigDecimal.valueOf(456,78)));
+        final CnecRamBranchData cnec = new CnecRamBranchData("id", 145, 257, Map.of("AB", BigDecimal.valueOf(1, 2345), "CD", BigDecimal.valueOf(456, 78)));
         final Vertex vertex = new Vertex(57, Map.of("EF", 127, "GH", 556));
         final CnecVertexRamData tested = new CnecVertexRamData(cnec, vertex, RAM);
         assertThat(tested.cnec()).isEqualTo(cnec);
