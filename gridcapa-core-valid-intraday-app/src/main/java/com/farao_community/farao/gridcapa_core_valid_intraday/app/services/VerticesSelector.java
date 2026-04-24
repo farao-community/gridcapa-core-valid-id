@@ -97,7 +97,7 @@ public class VerticesSelector {
      * @param vertices              all considered vertices
      * @param cnecRamBranchDatas    all considered CNECs
      * @param nbVertices            the maximum number of constrained vertices to return
-     * @return the list of constrained vertices with the most constrained CNEC and its calculated constrained RAM
+     * @return the list of nbVertices constrained vertices with the most constrained CNEC and its calculated constrained RAM
      */
     public List<CnecVertexRamData> selectConstrainedVertices(final List<Vertex> vertices,
                                                              final List<CnecRamBranchData> cnecRamBranchDatas,
