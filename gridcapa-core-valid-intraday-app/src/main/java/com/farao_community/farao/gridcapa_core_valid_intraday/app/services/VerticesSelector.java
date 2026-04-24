@@ -83,6 +83,11 @@ public class VerticesSelector {
 
     }
 
+    public List<Vertex> selectConstrainedVertices(final List<Vertex> vertices,
+                                                 final int nbVertices) {
+        return null;
+    }
+
     /**
      * @param vertex           the considered vertex
      * @param referenceProgram contains the market positions

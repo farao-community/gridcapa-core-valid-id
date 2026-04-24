@@ -202,6 +202,10 @@
             <groupId>com.powsybl</groupId>
             <artifactId>open-rao-crac-io-fb-constraint</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.nd4j</groupId>
+            <artifactId>nd4j-native</artifactId>
+        </dependency>
 
         <!-- RUNTIME DEPENDENCIES -->
         <dependency>
