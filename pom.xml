@@ -66,7 +66,6 @@
         <jsonapi.converter.version>0.11</jsonapi.converter.version>
         <maven.jaxb.version>4.0.8</maven.jaxb.version>
         <opencsv.version>5.6</opencsv.version>
-        <nd4j-version>1.0.0-M2.1</nd4j-version>
 
         <!-- BUSINESS DEPENDENCIES -->
         <farao.dependencies.version>1.47.0</farao.dependencies.version>
@@ -135,11 +134,6 @@
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-jdk8</artifactId>
                 <version>${jackson-datatype.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.nd4j</groupId>
-                <artifactId>nd4j-native</artifactId>
-                <version>${nd4j-version}</version>
             </dependency>
 
             <!-- RUNTIME DEPENDENCIES -->
