@@ -112,7 +112,6 @@ class VerticesSelectorTest {
                        new Vertex(5, Map.of("AA", -299, "BB", 600, "CC", -300)));
     }
 
-
     private List<Vertex> getTestVertices2() {
         return List.of(new Vertex(1, Map.of("AA", -500, "BB", 400, "CC", 300)),
                        new Vertex(2, Map.of("AA", 1300, "BB", -1600, "CC", 1300)),

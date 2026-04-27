@@ -115,7 +115,7 @@ public class VerticesSelector {
                 }
             }
             //for a given vertex get the lowest ram giving the most constrained CNEC
-            if(!vertexRamsByCnec.isEmpty()) {
+            if (!vertexRamsByCnec.isEmpty()) {
                 constrainedOrderedVertices.add(vertexRamsByCnec.stream()
                                                        .min(Comparator.comparingInt(CnecVertexRamData::ram))
                                                        .orElseThrow(
