@@ -115,15 +115,16 @@ public class VerticesSelector {
                 }
             }
             //for a given vertex get the lowest ram giving the most constrained CNEC
-            constrainedOrderedVertices.add(vertexRamsByCnec.stream()
-                                                           .sorted(Comparator.comparingInt(CnecVertexRamData::ram))
-                                                           .findFirst()
-                                                           .orElseThrow(
+            if(!vertexRamsByCnec.isEmpty()) {
+                constrainedOrderedVertices.add(vertexRamsByCnec.stream()
+                                                       .min(Comparator.comparingInt(CnecVertexRamData::ram))
+                                                       .orElseThrow(
                                                                () -> new CoreValidIntradayInvalidDataException(
                                                                        String.format("Impossible to find worse CNEC for vertex id %s", vertex.vertexId())
                                                                )
-                                                           )
-            );
+                                                       )
+                );
+            }
         }
         return constrainedOrderedVertices.stream()
                                          .sorted(Comparator.comparingInt(CnecVertexRamData::ram))
