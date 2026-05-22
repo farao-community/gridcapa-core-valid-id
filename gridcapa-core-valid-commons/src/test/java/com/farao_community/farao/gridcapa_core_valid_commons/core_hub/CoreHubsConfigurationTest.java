@@ -28,8 +28,8 @@ class CoreHubsConfigurationTest {
         Assertions.assertThat(coreHubsConfiguration.getCoreHubs())
                 .isNotNull()
                 .hasSize(14);
-        final CoreHub coreHubFrance = new CoreHub("France", "FR", "PTDF_FR", "FR-CORE", "FR", false, 1);
-        final CoreHub coreHubHvdc = new CoreHub("Hub Allemagne AleGro", "DE_ALEGrO", "PTDF_DE_AL", "ALDE-CORE", "DE_AL", true, 1);
+        final CoreHub coreHubFrance = new CoreHub("France", "FR", "PTDF_FR", "FR-CORE", "FR", false, false, 1);
+        final CoreHub coreHubHvdc = new CoreHub("Hub Allemagne AleGro", "DE_ALEGrO", "PTDF_DE_AL", "ALDE-CORE", "DE_AL", true, false, 1);
         Assertions.assertThat(coreHubsConfiguration.getCoreHubs()).contains(coreHubFrance, coreHubHvdc);
     }
 }

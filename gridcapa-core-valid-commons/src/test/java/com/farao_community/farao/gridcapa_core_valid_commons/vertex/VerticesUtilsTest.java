@@ -107,10 +107,10 @@ class VerticesUtilsTest {
 
     private List<CoreHub> getTestCoreHubs() {
         return List.of(
-                new CoreHub("Test1", "ram1", "fb1", "fc1", "AA", false, 1),
-                new CoreHub("Test2", "ram2", "fb2", "fc2", "BB", false, 1),
-                new CoreHub("Test3", "ram3", "fb3", "fc3", "CC", false, 1),
-                new CoreHub("Test4", "ram4", "fb4", "fc4", "D_D", true, 1)
+                new CoreHub("Test1", "ram1", "fb1", "fc1", "AA", false, false, 1),
+                new CoreHub("Test2", "ram2", "fb2", "fc2", "BB", false, false, 1),
+                new CoreHub("Test3", "ram3", "fb3", "fc3", "CC", false, false, 1),
+                new CoreHub("Test4", "ram4", "fb4", "fc4", "D_D", true, false, 1)
         );
     }
 
