@@ -27,4 +27,10 @@ public final class CoreHubUtils {
                                CoreHub::clusterVerticeCode,
                                (a, b) -> b));
     }
+
+    public static List<CoreHub> getNonAhcCoreHubs(final List<CoreHub> coreHubs) {
+        return coreHubs.stream()
+                .filter(coreHub -> !coreHub.isAhcHub())
+                .toList();
+    }
 }
