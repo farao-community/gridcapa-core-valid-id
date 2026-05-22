@@ -6,14 +6,14 @@
     <parent>
         <groupId>com.farao-community.farao</groupId>
         <artifactId>gridcapa-core-valid-intraday</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.6.0-beta</version>
     </parent>
 
     <artifactId>gridcapa-core-valid-intraday-app</artifactId>
     <name>GridCapa Core intraday validation runner application</name>
     <description>Core intraday validation runner application in GridCapa environment</description>
     <packaging>jar</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.6.0-beta</version>
     <build>
         <plugins>
             <plugin>
