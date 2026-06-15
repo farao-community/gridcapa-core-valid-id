@@ -32,15 +32,15 @@ public final class CnecRamMapper {
                     .getFlowBasedDomain().getFirst()
                     .getConstraintResults().getConstraintResult().stream()
                     .map(CnecRamMapper::getCnecRamBranchData).toList();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new CoreValidIntradayInvalidDataException("Failed to map CnecRam data to branch data", e);
         }
     }
 
-    private static @NotNull CnecRamBranchData getCnecRamBranchData(final ConstResultType constResultType) {
+    private static @NotNull CnecRamBranchData getCnecRamBranchData(final ConstResultType constraintResult) {
         final Map<String, BigDecimal> ptdfs = new HashMap<>();
-        constResultType.getPtdfs().getPtdf().forEach(p -> ptdfs.put(p.getHub().getName(), BigDecimal.valueOf(p.getValue())));
-        final CriticalBranchType cb = constResultType.getCriticalBranch();
+        constraintResult.getPtdfs().getPtdf().forEach(p -> ptdfs.put(p.getHub().getName(), BigDecimal.valueOf(p.getValue())));
+        final CriticalBranchType cb = constraintResult.getCriticalBranch();
         return new CnecRamBranchData(cb.getId(), getIntValue(cb.getRAM0Core()), getIntValue(cb.getAmr()), ptdfs);
     }
 
