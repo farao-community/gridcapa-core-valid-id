@@ -30,6 +30,7 @@ import java.util.Map;
 import static java.util.Comparator.comparingDouble;
 
 public class VerticesSelector {
+    private static final Comparator<CnecVertexRamData> COMPARATOR = Comparator.comparingInt(CnecVertexRamData::ram);
     private final List<CoreHub> coreHubs;
 
     public VerticesSelector(final CoreHubsConfiguration coreHubsConfiguration) {
@@ -117,7 +118,7 @@ public class VerticesSelector {
             //for a given vertex get the lowest ram giving the most constrained CNEC
             if (!vertexRamsByCnec.isEmpty()) {
                 constrainedOrderedVertices.add(vertexRamsByCnec.stream()
-                                                       .min(Comparator.comparingInt(CnecVertexRamData::ram))
+                                                       .min(COMPARATOR)
                                                        .orElseThrow(
                                                                () -> new CoreValidIntradayInvalidDataException(
                                                                        String.format("Impossible to find worse CNEC for vertex id %s", vertex.vertexId())
@@ -127,7 +128,7 @@ public class VerticesSelector {
             }
         }
         return constrainedOrderedVertices.stream()
-                                         .sorted(Comparator.comparingInt(CnecVertexRamData::ram))
+                                         .sorted(COMPARATOR)
                                          .limit(nbVertices)
                                          .toList();
     }
@@ -159,7 +160,7 @@ public class VerticesSelector {
         // global distance² = sum_over_hub(k_hub * [1D distance]²)
         double sumOfWeightedSquared = 0.0;
         for (final CoreHub hub : coreHubs) {
-            final Double marketPos = referenceProgram.getGlobalNetPosition(getEICodeForCoreHub(hub.forecastCode()));
+            final Double marketPos = referenceProgram.getGlobalNetPosition(getEICodeForCoreHubForecastCode(hub.forecastCode()));
             final Integer vertexPos = vertexPositions.get(hub.clusterVerticeCode());
 
             if (vertexPos == null) {
@@ -176,35 +177,22 @@ public class VerticesSelector {
         return Pair.of(vertex, Math.sqrt(sumOfWeightedSquared));
     }
 
-    private EICode getEICodeForCoreHub(String hubForecastCode) {
-        Country country;
-        switch (hubForecastCode) {
-            case "AT-CORE" : country = Country.AT;
-                break;
-            case "ALBE-CORE", "BE-CORE" : country =  Country.BE;
-                break;
-            case "CZ-CORE" : country =  Country.CZ;
-                break;
-            case "ALDE-CORE", "DE-CORE" : country = Country.DE;
-                break;
-            case "FR-CORE" : country =  Country.FR;
-                break;
-            case "HR-CORE" : country =  Country.HR;
-                break;
-            case "HU-CORE" : country =  Country.HU;
-                break;
-            case "NL-CORE" : country =  Country.NL;
-                break;
-            case "PL-CORE" : country =  Country.PL;
-                break;
-            case "RO-CORE" : country =  Country.RO;
-                break;
-            case "SI-CORE" : country =  Country.SI;
-                break;
-            case "SK-CORE" : country =  Country.SK;
-                break;
-            default: throw new IllegalArgumentException("Unknown hubForecastCode : " + hubForecastCode + ".");
-        }
+    private EICode getEICodeForCoreHubForecastCode(String hubForecastCode) {
+        final Country country = switch (hubForecastCode) {
+            case "AT-CORE" -> Country.AT;
+            case "ALBE-CORE", "BE-CORE" -> Country.BE;
+            case "CZ-CORE" -> Country.CZ;
+            case "ALDE-CORE", "DE-CORE" -> Country.DE;
+            case "FR-CORE" -> Country.FR;
+            case "HR-CORE" -> Country.HR;
+            case "HU-CORE" -> Country.HU;
+            case "NL-CORE" -> Country.NL;
+            case "PL-CORE" -> Country.PL;
+            case "RO-CORE" -> Country.RO;
+            case "SI-CORE" -> Country.SI;
+            case "SK-CORE" -> Country.SK;
+            default -> throw new IllegalArgumentException(String.format("Unknown hubForecastCode : %s", hubForecastCode));
+        };
         return new EICode(country);
     }
 

@@ -97,9 +97,9 @@ class VerticesSelectorTest {
         @Override
         public List<CoreHub> getCoreHubs() {
             return List.of(
-                new CoreHub("Test1", "ram1", "fb1", "FR-CORE", "AA", false, 1),
-                new CoreHub("Test2", "ram2", "fb2", "DE-CORE", "BB", false, 1),
-                new CoreHub("Test3", "ram3", "fb3", "BE-CORE", "CC", false, 1)
+                new CoreHub("Test1", "ram1", "fb1", "FR-CORE", "AA", false, false, 1),
+                new CoreHub("Test2", "ram2", "fb2", "DE-CORE", "BB", false, false, 1),
+                new CoreHub("Test3", "ram3", "fb3", "BE-CORE", "CC", false, false, 1)
             );
         }
     }

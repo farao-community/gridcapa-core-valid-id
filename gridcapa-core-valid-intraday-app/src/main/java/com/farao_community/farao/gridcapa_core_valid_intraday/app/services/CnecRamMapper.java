@@ -24,7 +24,7 @@ public final class CnecRamMapper {
         // utility class
     }
 
-    public static List<CnecRamBranchData> mapCnecRamToBranches(final FlowBasedDomainDocument  flowBasedDomainDocument) {
+    public static List<CnecRamBranchData> mapCnecRamToBranches(final FlowBasedDomainDocument flowBasedDomainDocument) {
         try {
             return flowBasedDomainDocument.getFlowBasedDomainTimeSeries().getFirst()
                     .getPeriod().getFirst()

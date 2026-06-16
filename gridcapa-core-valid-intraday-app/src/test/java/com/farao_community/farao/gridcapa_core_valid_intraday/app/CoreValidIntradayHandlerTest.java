@@ -12,6 +12,7 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreV
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.FileImporter;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +32,16 @@ class CoreValidIntradayHandlerTest {
     @Autowired
     private CoreValidIntradayHandler coreValidIntradayHandler;
 
+    private CoreValidIntradayRequest request;
+
+    @BeforeEach
+    void prepareRequestMock() {
+        request = Mockito.mock(CoreValidIntradayRequest.class);
+        Mockito.when(request.getTimestamp()).thenReturn(OffsetDateTime.now());
+    }
+
     @Test
     void handleCoreValidIntradayRequestTestImportOcappiThenException() {
-        CoreValidIntradayRequest request = Mockito.mock(CoreValidIntradayRequest.class);
-        Mockito.when(request.getTimestamp()).thenReturn(OffsetDateTime.now());
         Mockito.when(request.getOcappiMarketPoint()).thenReturn(new CoreValidIntradayFileResource("test_file_name", "test_file_url"));
         Mockito.when(fileImporter.importReferenceProgram(Mockito.any(), Mockito.any())).thenReturn(new ReferenceProgram(List.of()));
         Mockito.when(fileImporter.importAggregatedScheduleFile(Mockito.any(), Mockito.any())).thenReturn(BigDecimal.ZERO);
@@ -49,8 +56,6 @@ class CoreValidIntradayHandlerTest {
 
     @Test
     void handleCoreValidIntradayRequestTestImportRefProgThenException() {
-        CoreValidIntradayRequest request = Mockito.mock(CoreValidIntradayRequest.class);
-        Mockito.when(request.getTimestamp()).thenReturn(OffsetDateTime.now());
         Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class).isThrownBy(() -> coreValidIntradayHandler.handleCoreValidIntradayRequest(request));
         Mockito.verify(fileImporter).importCnecRamFile(Mockito.any());
         Mockito.verify(fileImporter).importVertices(Mockito.any());

@@ -41,6 +41,7 @@ public class CoreValidIntradayHandler {
     //TODO replace with parameters
     private static final int MAX_SELECTED_VERTICES = 5;
     private static final int SELECTED_CONTROL_ZONE_SIZE = 500;
+    private static final String RTE_EI_CODE = "10YFR-RTE------C";
 
     private final Logger eventsLogger;
     private final FileImporter fileImporter;
@@ -67,14 +68,14 @@ public class CoreValidIntradayHandler {
         final ReferenceProgram marketPoints = fileImporter.importReferenceProgram(coreValidIntradayRequest.getMarketPoint(), targetProcessDateTime);
         if (coreValidIntradayRequest.getOcappiMarketPoint() != null) {
             marketPoints.getAllGlobalNetPositions()
-                    .put(new EICode("10YFR-RTE------C"),
+                    .put(new EICode(RTE_EI_CODE),
                          fileImporter.importAggregatedScheduleFile(coreValidIntradayRequest.getOcappiMarketPoint(),
                                                                    targetProcessDateTime)
                                  .doubleValue());
         }
         //TODO calculate IVA stuff
-        List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam), coreHubsConfiguration.getCoreHubs());
-        VerticesSelector verticesSelector = new VerticesSelector(coreHubsConfiguration);
+        final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam), coreHubsConfiguration.getCoreHubs());
+        final VerticesSelector verticesSelector = new VerticesSelector(coreHubsConfiguration);
         final List<Vertex> vertices = verticesSelector.selectVerticesWithinNSphere(projectedVertices, marketPoints, SELECTED_CONTROL_ZONE_SIZE, MAX_SELECTED_VERTICES);
 
         //TODO output IVAs
