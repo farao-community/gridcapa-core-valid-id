@@ -76,11 +76,11 @@ class IvaVolumesManagerTest {
         Mockito.when(rao.computeIvaVolume(any(), any()))
             .thenReturn(TEN);
 
-        verify(rao).computeIvaVolume(any(), any());
-
         assertThat(mgr.computeIvaVolumes(100, rao))
             .isNotEmpty()
             .doesNotContainValue(ZERO);
+
+        verify(rao).computeIvaVolume(any(), any());
     }
 
     private Vertex mockVertex(final int frValue) {
