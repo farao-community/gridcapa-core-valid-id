@@ -81,8 +81,7 @@ public class IvaVolumesManager {
 
         if (domain.getConstraintResults() == null || domain.getConstraintResults().getConstraintResult() == null) {
             return Stream.empty();
-        }
-        else {
+        } else {
             return domain.getConstraintResults().getConstraintResult().stream();
         }
     }
