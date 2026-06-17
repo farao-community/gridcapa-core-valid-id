@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><FlowBasedDomainDocument xmlns="flowbased" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="flowbaseddomaindocument-25.xsd" DtdVersion="0" DtdRelease="0">
+  <DocumentIdentification v="ID2CCCt-20250921FID2-645v1"/>
+  <DocumentVersion v="1"/>
+  <DocumentType v="B08"/>
+  <ProcessType v="A02"/>
+  <SenderIdentification codingScheme="A01" v="XXXXXXXXXXXXXXXX"/>
+  <SenderRole v="A36"/>
+  <ReceiverIdentification codingScheme="A01" v="XXXXXXXXXXXXXXXX"/>
+  <ReceiverRole v="A04"/>
+  <CreationDateTime v="2025-09-20T18:34:05Z"/>
+  <FlowBasedDomainTimeInterval v="2025-09-20T22:00Z/2025-09-20T23:00Z"/>
+  <Domain codingScheme="A01" v="XXXXXXXXXXXXXXXX"/>
+  <FlowBasedDomainTimeSeries>
+    <TimeSeriesIdentification v="1"/>
+    <BusinessType v="A06"/>
+    <Product v="XXXXXXXXXXXXX"/>
+    <BalanceArea codingScheme="A01" v="XXXXXXXXXXXXXXXX"/>
+    <Period>
+      <TimeInterval v="2025-09-20T22:00Z/2025-09-20T23:00Z"/>
+      <Resolution v="PT60M"/>
+      <Interval>
+        <Pos v="1"/>
+        <FlowBasedDomain id="DACF_REFPROG" name="REFPROG" domainStatus="ok">
+          <constraintResults>
+            <constraintResult id="XXXXXXXXXXXX" type="BRANCH">
+              <criticalBranch id="CCCCCCCCCCCC">
+                <monitoredBranch name="IVA CALCULATION TEST" eic="XXXXXXXXXXXXXXXX">
+                  <inGrid id="XXXXXXXXXXXXXXXX">
+                    <from name="YYYYYYY"/>
+                    <to name="XXXXXXXX"/>
+                    <elementName>102A</elementName>
+                    <order>1</order>
+                  </inGrid>
+                  <specified id="XXXXXXXXXXXXXXXX">
+                    <from name="YYYYYYY"/>
+                    <to name="XXXXXXXX"/>
+                    <elementName>102A</elementName>
+                    <direction>DIRECT</direction>
+                  </specified>
+                </monitoredBranch>
+                <branchStatus>OK</branchStatus>
+                <direction>DIRECT</direction>
+                <iva>0</iva>
+                <uva>0</uva>
+                <fMax>100</fMax>
+                <fRef>10</fRef>
+                <frmMw>10</frmMw>
+                <iMaxType>SEASONAL</iMaxType>
+                <iMaxA>1000</iMaxA>
+                <fUaf>0</fUaf>
+                <f0All>20</f0All>
+                <f0Core>10</f0Core>
+                <CNEC>false</CNEC>
+                <maxZ2ZPTDF>0.09</maxZ2ZPTDF>
+                <maxZ2ZBorder from="CZ" to="SI"/>
+                <outage name="BASECASE">
+                  <Status>N</Status>
+                </outage>
+                <RAM0core>100</RAM0core>
+                <RAM>100</RAM>
+                <tsoOrigin>FR</tsoOrigin>
+              </criticalBranch>
+              <ptdfs>
+                <ptdf>
+                  <hub name="AT"/>
+                  <value>0.000100</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="BE"/>
+                  <value>0.000100</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="BE_AL"/>
+                  <value>0.0001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="CZ"/>
+                  <value>0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="DE"/>
+                  <value>0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="DE_AL"/>
+                  <value>0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="FR"/>
+                  <value>0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="HR"/>
+                  <value>-0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="HU"/>
+                  <value>0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="NL"/>
+                  <value>0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="PL"/>
+                  <value>0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="RO"/>
+                  <value>0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="SI"/>
+                  <value>-0.001</value>
+                </ptdf>
+                <ptdf>
+                  <hub name="SK"/>
+                  <value>0.001</value>
+                </ptdf>
+              </ptdfs>
+              <domainLimit>
+                <region>false</region>
+                <tso>false</tso>
+              </domainLimit>
+            </constraintResult>
+          </constraintResults>
+        </FlowBasedDomain>
+        <FlowBasedDomain id="DACF_ZEROBALANCE" name="ZEROBALANCE"/>
+      </Interval>
+    </Period>
+  </FlowBasedDomainTimeSeries>
+</FlowBasedDomainDocument>
+                           
