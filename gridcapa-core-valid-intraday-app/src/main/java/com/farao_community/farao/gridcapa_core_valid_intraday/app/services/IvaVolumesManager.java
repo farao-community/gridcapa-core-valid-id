@@ -10,10 +10,8 @@ import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.ConstResultType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.CriticalBranchType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
-import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainTimeSeriesType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.IntervalType;
-import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.PeriodType;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 
 import java.math.BigDecimal;
@@ -21,8 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.math.BigDecimal.ZERO;
@@ -42,33 +38,29 @@ public class IvaVolumesManager {
                              final Map<String, BigDecimal> ptdfsZsByBranch,
                              final FlowBasedDomainDocument fbDomainDoc) {
         this.vertices = vertices;
-        // global = in regard to the whole zone, france excluded
+        // global = in regard to the whole zone, France excluded
         this.frenchMarketGlobalNetPosition = BigDecimal.valueOf(refProg.getGlobalNetPosition(FRENCH_TSO_EIC));
         this.ptdfsZsByBranch = ptdfsZsByBranch;
-
-        final Function<FlowBasedDomainTimeSeriesType, Stream<PeriodType>> toPeriodStream = ts -> ts.getPeriod().stream();
-        final Function<PeriodType, Stream<IntervalType>> toIntervalStream = pt -> pt.getInterval().stream();
 
         this.criticalBranches = fbDomainDoc
             .getFlowBasedDomainTimeSeries()
             .stream()
-            .flatMap(toPeriodStream)
-            .flatMap(toIntervalStream)
+            .flatMap(ts -> ts.getPeriod().stream())
+            .flatMap(pt -> pt.getInterval().stream())
             .flatMap(IvaVolumesManager::getCriticalBranchesFromInterval)
             .toList();
     }
 
-    public Map<String, BigDecimal> computeIvaVolumes(final double riskMarginInMW) {
+    public Map<String, BigDecimal> computeIvaVolumes(final double riskMarginInMW, final RaoService raoService) {
         final Map<String, BigDecimal> idToIva = new HashMap<>();
         final BigDecimal margin = BigDecimal.valueOf(riskMarginInMW);
 
         for (final CriticalBranchType branch : this.criticalBranches) {
             final BigDecimal frmWithRisk = getFrm(branch).add(margin);
-            final Predicate<Vertex> isMarketPosAboveMargin = vertex -> getMarginFromMarket(branch, vertex)
-                                                                           .compareTo(frmWithRisk) >= 0;
+
             final BigDecimal iva = this.vertices.stream()
-                .filter(isMarketPosAboveMargin)
-                .map(getIvaFromRao(branch))
+                .filter(v -> getMarginFromMarket(branch, v).compareTo(frmWithRisk) >= 0) // margin > FRM
+                .map(v -> raoService.computeIvaVolume(branch, v))
                 .max(BigDecimal::compareTo)
                 .orElse(ZERO);
 
@@ -76,11 +68,6 @@ public class IvaVolumesManager {
         }
 
         return idToIva;
-    }
-
-    private Function<Vertex, BigDecimal> getIvaFromRao(final CriticalBranchType cnei) {
-        // PLACEHOLDER, TO BE DEFINED
-        return vertex -> BigDecimal.TEN;
     }
 
     private static Stream<CriticalBranchType> getCriticalBranchesFromInterval(final IntervalType interval) {
@@ -91,8 +78,13 @@ public class IvaVolumesManager {
     }
 
     private static Stream<ConstResultType> getConstraintResultStream(final FlowBasedDomainType domain) {
-        return domain.getConstraintResults() == null ? Stream.empty()
-            : domain.getConstraintResults().getConstraintResult().stream();
+
+        if (domain.getConstraintResults() == null || domain.getConstraintResults().getConstraintResult() == null) {
+            return Stream.empty();
+        }
+        else {
+            return domain.getConstraintResults().getConstraintResult().stream();
+        }
     }
 
     private static boolean isFrenchOrigin(final CriticalBranchType criticalBranch) {

@@ -8,6 +8,7 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayFileResource;
+import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.CriticalBranchType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,11 +49,11 @@ class IvaVolumesManagerTest {
 
     @Test
     void shouldHaveZeroIfRaoNotCalled() {
-        final IvaVolumesManager mgr = new IvaVolumesManager(List.of(getTestVertex(2000)),
+        final IvaVolumesManager mgr = new IvaVolumesManager(List.of(mockVertex(2000)),
                                                             referenceProgram,
                                                             Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(0.1)),
                                                             flowBasedDomainDocument);
-        assertThat(mgr.computeIvaVolumes(100))
+        assertThat(mgr.computeIvaVolumes(100, new MockRaoService()))
             .isNotEmpty()
             .containsValue(ZERO);
         // add test call to mock RAO when service exists
@@ -60,18 +61,26 @@ class IvaVolumesManagerTest {
 
     @Test
     void shouldNotHaveZeroIfRaoCalled() {
-        final IvaVolumesManager mgr = new IvaVolumesManager(List.of(getTestVertex(-300000)),
+        final IvaVolumesManager mgr = new IvaVolumesManager(List.of(mockVertex(-300000)),
                                                             referenceProgram,
                                                             Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(1000)),
                                                             flowBasedDomainDocument);
-        assertThat(mgr.computeIvaVolumes(100))
+        assertThat(mgr.computeIvaVolumes(100, new MockRaoService()))
             .isNotEmpty()
             .doesNotContainValue(ZERO);
         // add test call to mock RAO when service exists
     }
 
-    private Vertex getTestVertex(final int frValue) {
+    private Vertex mockVertex(final int frValue) {
         return new Vertex(1, Map.of("FR", frValue, "BE", -1000, "AT", 500));
+    }
+
+    private class MockRaoService implements RaoService {
+
+        @Override
+        public BigDecimal computeIvaVolume(final CriticalBranchType cnei, final Vertex vi) {
+            return BigDecimal.TEN;
+        }
     }
 
 }
