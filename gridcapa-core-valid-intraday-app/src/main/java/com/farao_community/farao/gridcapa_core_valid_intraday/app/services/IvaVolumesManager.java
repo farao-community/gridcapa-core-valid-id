@@ -123,7 +123,8 @@ public class IvaVolumesManager {
     }
 
     private static BigDecimal getFrm(final CriticalBranchType criticalBranch) {
-        return BigDecimal.valueOf(FRM_MARGIN_PERCENTAGE * criticalBranch.getFMax());
+        return BigDecimal.valueOf(FRM_MARGIN_PERCENTAGE)
+            .multiply(BigDecimal.valueOf(criticalBranch.getFMax()));
     }
 
 }

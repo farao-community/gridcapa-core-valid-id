@@ -8,11 +8,11 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayFileResource;
-import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.CriticalBranchType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -21,8 +21,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static java.math.BigDecimal.TEN;
 import static java.math.BigDecimal.ZERO;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 class IvaVolumesManagerTest {
@@ -53,10 +58,12 @@ class IvaVolumesManagerTest {
                                                             referenceProgram,
                                                             Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(0.1)),
                                                             flowBasedDomainDocument);
-        assertThat(mgr.computeIvaVolumes(100, new MockRaoService()))
+        final RaoService rao = mock();
+        assertThat(mgr.computeIvaVolumes(100, rao))
             .isNotEmpty()
             .containsValue(ZERO);
-        // add test call to mock RAO when service exists
+
+        verify(rao, never()).computeIvaVolume(any(), any());
     }
 
     @Test
@@ -65,22 +72,19 @@ class IvaVolumesManagerTest {
                                                             referenceProgram,
                                                             Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(1000)),
                                                             flowBasedDomainDocument);
-        assertThat(mgr.computeIvaVolumes(100, new MockRaoService()))
+        final RaoService rao = mock();
+        Mockito.when(rao.computeIvaVolume(any(), any()))
+            .thenReturn(TEN);
+
+        verify(rao).computeIvaVolume(any(), any());
+
+        assertThat(mgr.computeIvaVolumes(100, rao))
             .isNotEmpty()
             .doesNotContainValue(ZERO);
-        // add test call to mock RAO when service exists
     }
 
     private Vertex mockVertex(final int frValue) {
         return new Vertex(1, Map.of("FR", frValue, "BE", -1000, "AT", 500));
-    }
-
-    private class MockRaoService implements RaoService {
-
-        @Override
-        public BigDecimal computeIvaVolume(final CriticalBranchType cnei, final Vertex vi) {
-            return BigDecimal.TEN;
-        }
     }
 
 }
