@@ -69,9 +69,7 @@ public class CoreValidIntradayHandler {
         if (coreValidIntradayRequest.getOcappiMarketPoint() != null) {
             marketPoints.getAllGlobalNetPositions()
                     .put(new EICode(RTE_EI_CODE),
-                         fileImporter.importAggregatedScheduleFile(coreValidIntradayRequest.getOcappiMarketPoint(),
-                                                                   targetProcessDateTime)
-                                 .doubleValue());
+                         fileImporter.importAggregatedScheduleFile(coreValidIntradayRequest.getOcappiMarketPoint(), targetProcessDateTime).doubleValue());
         }
         //TODO calculate IVA stuff
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam), coreHubsConfiguration.getCoreHubs());
