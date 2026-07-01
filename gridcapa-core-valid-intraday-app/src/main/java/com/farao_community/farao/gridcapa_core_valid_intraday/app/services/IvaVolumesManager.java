@@ -15,6 +15,7 @@ import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.IntervalType;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.math.BigDecimal.ZERO;
-import static java.math.RoundingMode.HALF_EVEN;
 
 public class IvaVolumesManager {
     private static final String FR = "FR";
@@ -74,19 +74,15 @@ public class IvaVolumesManager {
     }
 
     private BigDecimal getBranchIvaMax(final CriticalBranchType branch, final BigDecimal frm, final BigDecimal minRamMcccPercent) {
-        return BigDecimal.valueOf(
-                Math.max(
-                        BigDecimal.valueOf(branch.getFMax())
+        return BigDecimal.valueOf(branch.getFMax())
                          .multiply(BigDecimal.ONE.subtract(minRamMcccPercent))
                          .subtract(frm)
                          .subtract(BigDecimal.valueOf(branch.getF0Core()))
                          //AMR and CVA are still not available in file, when they will be uncomment
                          //.add(BigDecimal.valueOf(branch.getAmr()))
                          //.add(BigDecimal.valueOf(branch.getCva()))
-                         .setScale(0, HALF_EVEN).intValue(),
-                 0
-                )
-        );
+                         .setScale(0, RoundingMode.HALF_EVEN)
+                         .max(ZERO);
     }
 
     private static Stream<CriticalBranchType> getCriticalBranchesFromInterval(final IntervalType interval) {
