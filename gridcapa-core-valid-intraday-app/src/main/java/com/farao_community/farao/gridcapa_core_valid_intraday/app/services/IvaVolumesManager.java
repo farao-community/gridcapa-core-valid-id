@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.math.BigDecimal.ZERO;
+import static java.math.RoundingMode.HALF_EVEN;
 
 public class IvaVolumesManager {
     private static final String FR = "FR";
@@ -51,12 +52,13 @@ public class IvaVolumesManager {
             .toList();
     }
 
-    public Map<String, BigDecimal> computeIvaVolumes(final double riskMarginInMW, final RaoService raoService) {
+    public Map<String, BigDecimal> computeIvaVolumes(final double riskMarginInMW, final RaoService raoService, final BigDecimal minRamMcccPercent) {
         final Map<String, BigDecimal> idToIva = new HashMap<>();
         final BigDecimal margin = BigDecimal.valueOf(riskMarginInMW);
 
         for (final CriticalBranchType branch : this.criticalBranches) {
-            final BigDecimal frmWithRisk = getFrm(branch).add(margin);
+            final BigDecimal frm = getFrm(branch);
+            final BigDecimal frmWithRisk =  frm.add(margin);
 
             final BigDecimal iva = this.vertices.stream()
                 .filter(v -> getMarginFromMarket(branch, v).compareTo(frmWithRisk) >= 0) // margin > FRM
@@ -64,10 +66,27 @@ public class IvaVolumesManager {
                 .max(BigDecimal::compareTo)
                 .orElse(ZERO);
 
-            idToIva.put(branch.getId(), iva);
+            final BigDecimal branchIvaMax = getBranchIvaMax(branch, frm, minRamMcccPercent);
+            idToIva.put(branch.getId(), iva.compareTo(branchIvaMax) > 0 ? branchIvaMax : iva);
         }
 
         return idToIva;
+    }
+
+    private BigDecimal getBranchIvaMax(final CriticalBranchType branch, final BigDecimal frm, final BigDecimal minRamMcccPercent) {
+        return BigDecimal.valueOf(
+                Math.max(
+                        BigDecimal.valueOf(branch.getFMax())
+                         .multiply(BigDecimal.ONE.subtract(minRamMcccPercent))
+                         .subtract(frm)
+                         .subtract(BigDecimal.valueOf(branch.getF0Core()))
+                         //AMR and CVA are still not available in file, when they will be uncomment
+                         //.add(BigDecimal.valueOf(branch.getAmr()))
+                         //.add(BigDecimal.valueOf(branch.getCva()))
+                         .setScale(0, HALF_EVEN).intValue(),
+                 0
+                )
+        );
     }
 
     private static Stream<CriticalBranchType> getCriticalBranchesFromInterval(final IntervalType interval) {

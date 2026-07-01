@@ -59,7 +59,7 @@ class IvaVolumesManagerTest {
                                                             Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(0.1)),
                                                             flowBasedDomainDocument);
         final RaoService rao = mock();
-        assertThat(mgr.computeIvaVolumes(100, rao))
+        assertThat(mgr.computeIvaVolumes(100, rao, BigDecimal.valueOf(0.20)))
             .isNotEmpty()
             .containsValue(ZERO);
 
@@ -76,10 +76,28 @@ class IvaVolumesManagerTest {
         Mockito.when(rao.computeIvaVolume(any(), any()))
             .thenReturn(TEN);
 
-        assertThat(mgr.computeIvaVolumes(100, rao))
+        assertThat(mgr.computeIvaVolumes(100, rao, BigDecimal.valueOf(0.20)))
             .isNotEmpty()
             .doesNotContainValue(ZERO);
 
+        verify(rao).computeIvaVolume(any(), any());
+    }
+
+    @Test
+    void shouldBeLimitedByMaxIvaRule() {
+        final IvaVolumesManager mgr = new IvaVolumesManager(List.of(mockVertex(-300000)),
+                                                            referenceProgram,
+                                                            Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(1000)),
+                                                            flowBasedDomainDocument);
+        final RaoService rao = mock();
+        final BigDecimal eighty = BigDecimal.valueOf(80);
+        Mockito.when(rao.computeIvaVolume(any(), any()))
+                .thenReturn(eighty);
+
+        assertThat(mgr.computeIvaVolumes(100, rao, BigDecimal.valueOf(0.20)))
+                .isNotEmpty()
+                .containsValue(BigDecimal.valueOf(65)) // value of maxIva is taken
+                .doesNotContainValue(eighty);
         verify(rao).computeIvaVolume(any(), any());
     }
 
