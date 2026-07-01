@@ -67,7 +67,7 @@ public class IvaVolumesManager {
                 .orElse(ZERO);
 
             final BigDecimal branchIvaMax = getBranchIvaMax(branch, frm, minRamMcccPercent);
-            idToIva.put(branch.getId(), iva.compareTo(branchIvaMax) > 0 ? branchIvaMax : iva);
+            idToIva.put(branch.getId(), iva.min(branchIvaMax));
         }
 
         return idToIva;
@@ -78,7 +78,7 @@ public class IvaVolumesManager {
                          .multiply(BigDecimal.ONE.subtract(minRamMcccPercent))
                          .subtract(frm)
                          .subtract(BigDecimal.valueOf(branch.getF0Core()))
-                         //AMR and CVA are still not available in file, when they will be uncomment
+                         //AMR and CVA are still not available in file, when they will be, uncomment
                          //.add(BigDecimal.valueOf(branch.getAmr()))
                          //.add(BigDecimal.valueOf(branch.getCva()))
                          .setScale(0, RoundingMode.HALF_EVEN)

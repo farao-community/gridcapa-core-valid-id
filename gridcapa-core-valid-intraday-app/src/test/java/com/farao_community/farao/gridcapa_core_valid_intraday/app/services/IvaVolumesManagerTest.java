@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verify;
 @SpringBootTest
 class IvaVolumesManagerTest {
 
+    private static final BigDecimal MIN_RAM_MCCC_PERCENT = BigDecimal.valueOf(0.20);
     @Autowired
     private FileImporter fileImporter;
     private static final OffsetDateTime TEST_DATE_TIME = OffsetDateTime.parse("2021-07-22T22:30Z");
@@ -59,7 +60,7 @@ class IvaVolumesManagerTest {
                                                             Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(0.1)),
                                                             flowBasedDomainDocument);
         final RaoService rao = mock();
-        assertThat(mgr.computeIvaVolumes(100, rao, BigDecimal.valueOf(0.20)))
+        assertThat(mgr.computeIvaVolumes(100, rao, MIN_RAM_MCCC_PERCENT))
             .isNotEmpty()
             .containsValue(ZERO);
 
@@ -76,7 +77,7 @@ class IvaVolumesManagerTest {
         Mockito.when(rao.computeIvaVolume(any(), any()))
             .thenReturn(TEN);
 
-        assertThat(mgr.computeIvaVolumes(100, rao, BigDecimal.valueOf(0.20)))
+        assertThat(mgr.computeIvaVolumes(100, rao, MIN_RAM_MCCC_PERCENT))
             .isNotEmpty()
             .doesNotContainValue(ZERO);
 
@@ -94,7 +95,7 @@ class IvaVolumesManagerTest {
         Mockito.when(rao.computeIvaVolume(any(), any()))
                 .thenReturn(eighty);
 
-        assertThat(mgr.computeIvaVolumes(100, rao, BigDecimal.valueOf(0.20)))
+        assertThat(mgr.computeIvaVolumes(100, rao, MIN_RAM_MCCC_PERCENT))
                 .isNotEmpty()
                 .containsValue(BigDecimal.valueOf(65)) // value of maxIva is taken
                 .doesNotContainValue(eighty);
