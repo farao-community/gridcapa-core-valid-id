@@ -52,7 +52,7 @@ public class IvaVolumesManager {
             .toList();
     }
 
-    public Map<String, BigDecimal> computeIvaVolumes(final double riskMarginInMW, final RaoService raoService, final BigDecimal minRamMcccPercent) {
+    public Map<String, BigDecimal> computeIvaVolumes(final double riskMarginInMW, final RaoService raoService, final BigDecimal minRamMccc) {
         final Map<String, BigDecimal> idToIva = new HashMap<>();
         final BigDecimal margin = BigDecimal.valueOf(riskMarginInMW);
 
@@ -66,16 +66,16 @@ public class IvaVolumesManager {
                 .max(BigDecimal::compareTo)
                 .orElse(ZERO);
 
-            final BigDecimal branchIvaMax = getBranchIvaMax(branch, frm, minRamMcccPercent);
+            final BigDecimal branchIvaMax = getBranchIvaMax(branch, frm, minRamMccc);
             idToIva.put(branch.getId(), iva.min(branchIvaMax));
         }
 
         return idToIva;
     }
 
-    private BigDecimal getBranchIvaMax(final CriticalBranchType branch, final BigDecimal frm, final BigDecimal minRamMcccPercent) {
+    private BigDecimal getBranchIvaMax(final CriticalBranchType branch, final BigDecimal frm, final BigDecimal minRamMccc) {
         return BigDecimal.valueOf(branch.getFMax())
-                         .multiply(BigDecimal.ONE.subtract(minRamMcccPercent))
+                         .multiply(BigDecimal.ONE.subtract(minRamMccc))
                          .subtract(frm)
                          .subtract(BigDecimal.valueOf(branch.getF0Core()))
                          //AMR and CVA are still not available in file, when they will be, uncomment
