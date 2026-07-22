@@ -18,6 +18,6 @@ public record CnecRamBranchData(String branchId, int ram0Core, int amr, Map<Stri
 
     @Override
     public Map<String, BigDecimal> getPtdfValues() {
-        return ptdfValues;
+        return Map.copyOf(ptdfValues);
     }
 }

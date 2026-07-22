@@ -40,6 +40,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: BE
     - name: Hub Belgique AleGro
       ramcep2-code: BE_ALEGrO
       flowbased-code: PTDF_BE_AL
@@ -48,6 +49,7 @@ core-valid-commons:
       is-hvdc-hub: true
       is-ahc-hub: false
       coefficient: 1
+      country: BE
     - name: Hub Allemagne AleGro
       ramcep2-code: DE_ALEGrO
       flowbased-code: PTDF_DE_AL
@@ -56,6 +58,7 @@ core-valid-commons:
       is-hvdc-hub: true
       is-ahc-hub: false
       coefficient: 1
+      country: DE
     - name: Allemagne
       ramcep2-code: DE
       flowbased-code: PTDF_DE
@@ -64,6 +67,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: DE
     - name: France
       ramcep2-code: FR
       flowbased-code: PTDF_FR
@@ -72,3 +76,4 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: FR

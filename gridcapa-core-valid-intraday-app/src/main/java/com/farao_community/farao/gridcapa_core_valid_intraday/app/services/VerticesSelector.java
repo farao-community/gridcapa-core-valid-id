@@ -14,7 +14,6 @@ import com.farao_community.farao.gridcapa_core_valid_commons.vertex.VerticesUtil
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.CoreValidIntradayInvalidDataException;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRamBranchData;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecVertexRamData;
-import com.powsybl.iidm.network.Country;
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.apache.commons.lang3.tuple.Pair;
@@ -160,7 +159,7 @@ public class VerticesSelector {
         // global distance² = sum_over_hub(k_hub * [1D distance]²)
         double sumOfWeightedSquared = 0.0;
         for (final CoreHub hub : coreHubs) {
-            final Double marketPos = referenceProgram.getGlobalNetPosition(getEICodeForCoreHubForecastCode(hub.forecastCode()));
+            final Double marketPos = referenceProgram.getGlobalNetPosition(new EICode(hub.country()));
             final Integer vertexPos = vertexPositions.get(hub.clusterVerticeCode());
 
             if (vertexPos == null) {
@@ -176,24 +175,4 @@ public class VerticesSelector {
 
         return Pair.of(vertex, Math.sqrt(sumOfWeightedSquared));
     }
-
-    private EICode getEICodeForCoreHubForecastCode(String hubForecastCode) {
-        final Country country = switch (hubForecastCode) {
-            case "AT-CORE" -> Country.AT;
-            case "ALBE-CORE", "BE-CORE" -> Country.BE;
-            case "CZ-CORE" -> Country.CZ;
-            case "ALDE-CORE", "DE-CORE" -> Country.DE;
-            case "FR-CORE" -> Country.FR;
-            case "HR-CORE" -> Country.HR;
-            case "HU-CORE" -> Country.HU;
-            case "NL-CORE" -> Country.NL;
-            case "PL-CORE" -> Country.PL;
-            case "RO-CORE" -> Country.RO;
-            case "SI-CORE" -> Country.SI;
-            case "SK-CORE" -> Country.SK;
-            default -> throw new IllegalArgumentException(String.format("Unknown hubForecastCode : %s", hubForecastCode));
-        };
-        return new EICode(country);
-    }
-
 }
