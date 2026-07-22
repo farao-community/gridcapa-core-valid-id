@@ -23,6 +23,10 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @SpringBootTest
 class CoreValidIntradayHandlerTest {
 
@@ -36,32 +40,32 @@ class CoreValidIntradayHandlerTest {
 
     @BeforeEach
     void prepareRequestMock() {
-        request = Mockito.mock(CoreValidIntradayRequest.class);
-        Mockito.when(request.getTimestamp()).thenReturn(OffsetDateTime.now());
+        request = mock(CoreValidIntradayRequest.class);
+        when(request.getTimestamp()).thenReturn(OffsetDateTime.now());
     }
 
     @Test
     void handleCoreValidIntradayRequestTestImportOcappiThenException() {
-        Mockito.when(request.getOcappiMarketPoint()).thenReturn(new CoreValidIntradayFileResource("test_file_name", "test_file_url"));
-        Mockito.when(fileImporter.importReferenceProgram(Mockito.any(), Mockito.any())).thenReturn(new ReferenceProgram(List.of()));
-        Mockito.when(fileImporter.importAggregatedScheduleFile(Mockito.any(), Mockito.any())).thenReturn(BigDecimal.ZERO);
+        when(request.getOcappiMarketPoint()).thenReturn(new CoreValidIntradayFileResource("test_file_name", "test_file_url"));
+        when(fileImporter.importReferenceProgram(Mockito.any(), Mockito.any())).thenReturn(new ReferenceProgram(List.of()));
+        when(fileImporter.importAggregatedScheduleFile(Mockito.any(), Mockito.any())).thenReturn(BigDecimal.ZERO);
         Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class).isThrownBy(() -> coreValidIntradayHandler.handleCoreValidIntradayRequest(request));
-        Mockito.verify(fileImporter).importCnecRamFile(Mockito.any());
-        Mockito.verify(fileImporter).importVertices(Mockito.any());
-        Mockito.verify(fileImporter).importNetwork(Mockito.any());
-        Mockito.verify(fileImporter).importGlskFile(Mockito.any());
-        Mockito.verify(fileImporter).importMergedCnec(Mockito.any(), Mockito.any(), Mockito.any());
-        Mockito.verify(fileImporter).importAggregatedScheduleFile(Mockito.any(), Mockito.any());
+        verify(fileImporter).importCnecRamFile(Mockito.any());
+        verify(fileImporter).importVertices(Mockito.any());
+        verify(fileImporter).importNetwork(Mockito.any());
+        verify(fileImporter).importGlskFile(Mockito.any());
+        verify(fileImporter).importMergedCnec(Mockito.any(), Mockito.any(), Mockito.any());
+        verify(fileImporter).importAggregatedScheduleFile(Mockito.any(), Mockito.any());
     }
 
     @Test
     void handleCoreValidIntradayRequestTestImportRefProgThenException() {
         Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class).isThrownBy(() -> coreValidIntradayHandler.handleCoreValidIntradayRequest(request));
-        Mockito.verify(fileImporter).importCnecRamFile(Mockito.any());
-        Mockito.verify(fileImporter).importVertices(Mockito.any());
-        Mockito.verify(fileImporter).importNetwork(Mockito.any());
-        Mockito.verify(fileImporter).importGlskFile(Mockito.any());
-        Mockito.verify(fileImporter).importMergedCnec(Mockito.any(), Mockito.any(), Mockito.any());
-        Mockito.verify(fileImporter).importReferenceProgram(Mockito.any(), Mockito.any());
+        verify(fileImporter).importCnecRamFile(Mockito.any());
+        verify(fileImporter).importVertices(Mockito.any());
+        verify(fileImporter).importNetwork(Mockito.any());
+        verify(fileImporter).importGlskFile(Mockito.any());
+        verify(fileImporter).importMergedCnec(Mockito.any(), Mockito.any(), Mockito.any());
+        verify(fileImporter).importReferenceProgram(Mockito.any(), Mockito.any());
     }
 }
