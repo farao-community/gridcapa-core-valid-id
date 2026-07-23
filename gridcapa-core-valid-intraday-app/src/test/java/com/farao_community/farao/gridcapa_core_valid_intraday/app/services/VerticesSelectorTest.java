@@ -72,6 +72,13 @@ class VerticesSelectorTest {
 
         final List<Vertex> selectedVertices = selector.selectClosestVerticesByAngle(getTestVertices(), getTestRefProg(), 3);
         assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4);
+
+        final List<Vertex> angleOnlySelection = selector.selectClosestVerticesByAngle(
+                List.of(new Vertex(6, Map.of("AA", -600, "BB", 1200, "CC", -600)),
+                        new Vertex(7, Map.of("AA", -300, "BB", 600, "CC", 0))),
+                getTestRefProg(),
+                1);
+        assertThat(getIds(angleOnlySelection)).containsExactly(6);
     }
 
     private ReferenceProgram getTestRefProg() {

@@ -224,7 +224,8 @@ public class VerticesSelector {
             }
             scalarProduct += marketPos * vertexPos;
             normMarket += marketPos * marketPos;
-            normVertex += vertexPos * vertexPos;
+            final double vertexPosition = vertexPos;
+            normVertex += vertexPosition * vertexPosition;
         }
         final double cosinus = scalarProduct / (Math.sqrt(normMarket) * Math.sqrt(normVertex));
 
