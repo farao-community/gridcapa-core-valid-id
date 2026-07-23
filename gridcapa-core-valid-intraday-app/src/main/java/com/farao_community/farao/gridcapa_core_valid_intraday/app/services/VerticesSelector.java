@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -145,6 +146,50 @@ public class VerticesSelector {
                                          .sorted(COMPARATOR)
                                          .limit(maxNbVertices)
                                          .toList();
+    }
+
+    /**
+     *
+     * @param closestSelection          the list of vertices returned from selectClosestVertices
+     * @param closestPonderation        the ponderation to apply
+     * @param angleSelection            the list of vertices returned from selectClosestVerticesByAngle
+     * @param anglePonderation          the ponderation to apply
+     * @param constrainedSelection      the list of vertices returned from selectConstrainedVertices
+     * @param constrainedPonderation    the ponderation to apply
+     * @param n                         the maximum number of selected vertices to return
+     * @return The list of vertices through ponderated selection
+     */
+    public List<Vertex> selectionSynthesis(final List<Vertex> closestSelection,
+                                           final double closestPonderation,
+                                           final List<Vertex> angleSelection,
+                                           final double anglePonderation,
+                                           final List<CnecVertexRamData> constrainedSelection,
+                                           final double constrainedPonderation,
+                                           final int n) {
+
+        final Map<Vertex, Double> vertexIdToPonderation = new HashMap<>();
+        fillVertexPonderationMap(closestSelection, closestPonderation, vertexIdToPonderation);
+        fillVertexPonderationMap(angleSelection, anglePonderation, vertexIdToPonderation);
+        final List<Vertex> constrainedVertices = constrainedSelection.stream()
+                .map(CnecVertexRamData::vertex)
+                .toList();
+        fillVertexPonderationMap(constrainedVertices, constrainedPonderation, vertexIdToPonderation);
+        return vertexIdToPonderation.entrySet().stream()
+                .sorted(comparingDouble(Map.Entry::getValue))
+                .limit(n)
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    private void fillVertexPonderationMap(final List<Vertex> vertexList, final double ponderation, final Map<Vertex, Double> ponderationMap) {
+        for (int index = 0; index < vertexList.size(); index++) {
+            final Vertex vertex = vertexList.get(index);
+            if (ponderationMap.containsKey(vertex)) {
+                ponderationMap.put(vertex, index * ponderation + ponderationMap.get(vertex));
+            } else {
+                ponderationMap.put(vertex, index * ponderation);
+            }
+        }
     }
 
     /**

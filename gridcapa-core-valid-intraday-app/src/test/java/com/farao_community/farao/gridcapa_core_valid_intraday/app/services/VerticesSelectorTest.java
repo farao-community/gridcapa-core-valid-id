@@ -89,6 +89,17 @@ class VerticesSelectorTest {
         return vertices.stream().map(Vertex::vertexId).toList();
     }
 
+    @Test
+    void selectionSynthesis() {
+        final List<Vertex> rankedVertices = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+                                    getOrderedVertice2(), 0.33,
+                                    getOrderedVertice3(), 0.34,
+                                                                        5);
+        assertThat(getIds(rankedVertices)).isNotEmpty()
+                .hasSize(5)
+                .containsExactly(2, 1, 4, 3, 5);
+    }
+
     private static class TestRefProg extends ReferenceProgram {
         public TestRefProg(final List<ReferenceExchangeData> referenceExchangeDataList) {
             super(referenceExchangeDataList);
@@ -135,4 +146,33 @@ class VerticesSelectorTest {
                        new Vertex(5, Map.of("AA", -299, "BB", 600, "CC", 300)));
     }
 
+    private List<Vertex> getOrderedVertice1() {
+        return List.of(new Vertex(1, Map.of()),
+                       new Vertex(2, Map.of()),
+                       new Vertex(3, Map.of()),
+                       new Vertex(4, Map.of()),
+                       new Vertex(5, Map.of()));
+    }
+
+    private List<Vertex> getOrderedVertice2() {
+        return List.of(
+                       new Vertex(2, Map.of()),
+                       new Vertex(3, Map.of()),
+                       new Vertex(4, Map.of()),
+                       new Vertex(1, Map.of()),
+                       new Vertex(5, Map.of()));
+    }
+
+    private List<CnecVertexRamData> getOrderedVertice3() {
+        return List.of(
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(2, Map.of()), 0),
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(4, Map.of()), 0),
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(1, Map.of()), 0),
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(3, Map.of()), 0),
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(5, Map.of()), 0));
+    }
+
+    private CnecRamBranchData getEmptyCnecRamData() {
+        return new CnecRamBranchData("BRANCH_ID", 0, 0, Map.of());
+    }
 }
