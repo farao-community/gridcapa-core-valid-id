@@ -209,7 +209,7 @@ public class VerticesSelector {
 
         final Map<String, Integer> vertexPositions = vertex.coordinates();
 
-        // angle cosinus = (scalar product of refprog . vertex) divided by (euclidian norm of refprog by vertex)
+        // angle's cosinus = (scalar product of refprog . vertex) divided by (euclidian norm of refprog by vertex)
         double scalarProduct = 0.0;
         double normVertex = 0.0;
         double normMarket = 0.0;
