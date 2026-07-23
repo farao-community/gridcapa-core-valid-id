@@ -209,10 +209,10 @@ public class VerticesSelector {
 
         final Map<String, Integer> vertexPositions = vertex.coordinates();
 
-        // angle cosinus = (scalar product of refprog . vertex) divided by (euclidien norme of refprog by vertex)
+        // angle cosinus = (scalar product of refprog . vertex) divided by (euclidian norm of refprog by vertex)
         double scalarProduct = 0.0;
-        double normeVertex = 0.0;
-        double normeMarket = 0.0;
+        double normVertex = 0.0;
+        double normMarket = 0.0;
         for (final CoreHub hub : coreHubs) {
             final Double marketPos = referenceProgram.getGlobalNetPosition(new EICode(hub.country()));
             final Integer vertexPos = vertexPositions.get(hub.clusterVerticeCode());
@@ -223,10 +223,10 @@ public class VerticesSelector {
                                       vertex.vertexId(), hub.forecastCode(), hub.clusterVerticeCode()));
             }
             scalarProduct += marketPos * vertexPos;
-            normeMarket += marketPos * marketPos;
-            normeVertex += vertexPos * vertexPos;
+            normMarket += marketPos * marketPos;
+            normVertex += vertexPos * vertexPos;
         }
-        final double cosinus = scalarProduct / (Math.sqrt(normeMarket) * Math.sqrt(normeVertex));
+        final double cosinus = scalarProduct / (Math.sqrt(normMarket) * Math.sqrt(normVertex));
 
         return Pair.of(vertex, cosinus);
     }
