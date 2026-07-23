@@ -13,15 +13,12 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreV
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.CnecRamMapper;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.FileImporter;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.VerticesSelector;
-import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import com.powsybl.glsk.api.GlskDocument;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.crac.io.fbconstraint.FbConstraintCreationContext;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
@@ -35,23 +32,17 @@ import java.util.List;
 @Component
 public class CoreValidIntradayHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CoreValidIntradayHandler.class);
-    private static final DateTimeFormatter ARTIFACTS_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm");
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd' 'HH:mm");
     //TODO replace with parameters
     private static final int MAX_SELECTED_VERTICES = 5;
     private static final int SELECTED_CONTROL_ZONE_SIZE = 500;
     private static final String RTE_EI_CODE = "10YFR-RTE------C";
 
-    private final Logger eventsLogger;
     private final FileImporter fileImporter;
-    private final MinioAdapter minioAdapter;
     private final CoreHubsConfiguration coreHubsConfiguration;
 
-    public CoreValidIntradayHandler(final FileImporter fileImporter, final MinioAdapter minioAdapter, final Logger eventsLogger, final CoreHubsConfiguration coreHubsConfiguration) {
+    public CoreValidIntradayHandler(final FileImporter fileImporter, final CoreHubsConfiguration coreHubsConfiguration) {
         this.fileImporter = fileImporter;
-        this.minioAdapter = minioAdapter;
-        this.eventsLogger = eventsLogger;
         this.coreHubsConfiguration = coreHubsConfiguration;
     }
 

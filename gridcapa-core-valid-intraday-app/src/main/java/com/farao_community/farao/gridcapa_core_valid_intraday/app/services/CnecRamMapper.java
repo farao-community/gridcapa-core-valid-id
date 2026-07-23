@@ -11,12 +11,11 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRam
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.ConstResultType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.CriticalBranchType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
-import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class CnecRamMapper {
 
@@ -37,9 +36,12 @@ public final class CnecRamMapper {
         }
     }
 
-    private static @NotNull CnecRamBranchData getCnecRamBranchData(final ConstResultType constraintResult) {
-        final Map<String, BigDecimal> ptdfs = new HashMap<>();
-        constraintResult.getPtdfs().getPtdf().forEach(p -> ptdfs.put(p.getHub().getName(), BigDecimal.valueOf(p.getValue())));
+    private static CnecRamBranchData getCnecRamBranchData(final ConstResultType constraintResult) {
+        final Map<String, BigDecimal> ptdfs = constraintResult.getPtdfs().getPtdf().stream()
+                .collect(Collectors.toMap(
+                        p -> p.getHub().getName(),
+                        p -> BigDecimal.valueOf(p.getValue())
+                ));
         final CriticalBranchType cb = constraintResult.getCriticalBranch();
         return new CnecRamBranchData(cb.getId(), getIntValue(cb.getRAM0Core()), getIntValue(cb.getAmr()), ptdfs);
     }
