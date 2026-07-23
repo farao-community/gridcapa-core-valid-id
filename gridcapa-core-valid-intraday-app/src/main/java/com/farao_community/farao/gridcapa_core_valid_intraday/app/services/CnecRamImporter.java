@@ -23,22 +23,13 @@ public final class CnecRamImporter {
         // utility class
     }
 
-    private static final JAXBContext JAXB_CONTEXT = initJaxbContext();
-
     public static FlowBasedDomainDocument importCnecRam(final InputStream inputStream) {
         try {
-            final Unmarshaller unmarshaller = JAXB_CONTEXT.createUnmarshaller();
+            final JAXBContext context = JAXBContext.newInstance(FlowBasedDomainDocument.class);
+            final Unmarshaller unmarshaller = context.createUnmarshaller();
             return (FlowBasedDomainDocument) unmarshaller.unmarshal(inputStream);
         } catch (final Exception e) {
             throw new CoreValidIntradayInvalidDataException("Cannot unmarshal FlowBasedDomainDocument", e);
-        }
-    }
-
-    private static JAXBContext initJaxbContext() {
-        try {
-            return JAXBContext.newInstance(FlowBasedDomainDocument.class);
-        } catch (JAXBException e) {
-            throw new ExceptionInInitializerError(e);
         }
     }
 }
