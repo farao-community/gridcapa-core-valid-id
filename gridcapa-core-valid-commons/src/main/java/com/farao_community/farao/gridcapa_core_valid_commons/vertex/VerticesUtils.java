@@ -145,7 +145,7 @@ public final class VerticesUtils {
                 .divide(f0Core, DELTA_SCALE, HALF_EVEN);
     }
 
-    private static BigDecimal f0Core(final Vertex vertex,
+    public static BigDecimal f0Core(final Vertex vertex,
                                      final FlowBasedDomainBranchData branchData,
                                      final Map<String, String> fbToVertexCode) {
         //f0Core = ∑_over_hubs(PTDF*NP)

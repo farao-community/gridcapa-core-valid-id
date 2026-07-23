@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.gridcapa_core_valid_commons.core_hub;
 
+import com.powsybl.iidm.network.Country;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +29,8 @@ class CoreHubsConfigurationTest {
         Assertions.assertThat(coreHubsConfiguration.getCoreHubs())
                 .isNotNull()
                 .hasSize(14);
-        final CoreHub coreHubFrance = new CoreHub("France", "FR", "PTDF_FR", "FR-CORE", "FR", false, false, 1);
-        final CoreHub coreHubHvdc = new CoreHub("Hub Allemagne AleGro", "DE_ALEGrO", "PTDF_DE_AL", "ALDE-CORE", "DE_AL", true, false, 1);
+        final CoreHub coreHubFrance = new CoreHub("France", "FR", "PTDF_FR", "FR-CORE", "FR", false, false, 1, Country.FR);
+        final CoreHub coreHubHvdc = new CoreHub("Hub Allemagne AleGro", "DE_ALEGrO", "PTDF_DE_AL", "ALDE-CORE", "DE_AL", true, false, 1, Country.DE);
         Assertions.assertThat(coreHubsConfiguration.getCoreHubs()).contains(coreHubFrance, coreHubHvdc);
     }
 }

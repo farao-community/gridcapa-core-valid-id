@@ -39,6 +39,7 @@ public class CoreValidIntradayRequest {
     private final CoreValidIntradayFileResource glsk;
     private final CoreValidIntradayFileResource mergedCnec;
     private final CoreValidIntradayFileResource marketPoint;
+    private final CoreValidIntradayFileResource ocappiMarketPoint;
     private final CoreValidIntradayFileResource pra;
     private final boolean launchedAutomatically;
 
@@ -52,6 +53,7 @@ public class CoreValidIntradayRequest {
                                     final @JsonProperty("glsk") CoreValidIntradayFileResource glsk,
                                     final @JsonProperty("mergedCnec") CoreValidIntradayFileResource mergedCnec,
                                     final @JsonProperty("marketPoint") CoreValidIntradayFileResource marketPoint,
+                                    final @JsonProperty("ocappiMarketPoint") CoreValidIntradayFileResource ocappiMarketPoint,
                                     final @JsonProperty("pra") CoreValidIntradayFileResource pra,
                                     final @JsonProperty("launchedAutomatically") boolean launchedAutomatically) {
         this.id = id;
@@ -63,6 +65,7 @@ public class CoreValidIntradayRequest {
         this.glsk = glsk;
         this.mergedCnec = mergedCnec;
         this.marketPoint = marketPoint;
+        this.ocappiMarketPoint = ocappiMarketPoint;
         this.pra = pra;
         this.launchedAutomatically = launchedAutomatically;
     }
@@ -76,8 +79,9 @@ public class CoreValidIntradayRequest {
                                     final CoreValidIntradayFileResource glsk,
                                     final CoreValidIntradayFileResource mergedCnec,
                                     final CoreValidIntradayFileResource marketPoint,
+                                    final CoreValidIntradayFileResource ocappiMarketPoint,
                                     final CoreValidIntradayFileResource pra) {
-        this(id, currentRunId, timestamp, cnecRam, vertices, cgm, glsk, mergedCnec, marketPoint, pra, false);
+        this(id, currentRunId, timestamp, cnecRam, vertices, cgm, glsk, mergedCnec, marketPoint, ocappiMarketPoint, pra, false);
     }
 
     public String getId() {
@@ -114,6 +118,10 @@ public class CoreValidIntradayRequest {
 
     public CoreValidIntradayFileResource getMarketPoint() {
         return marketPoint;
+    }
+
+    public CoreValidIntradayFileResource getOcappiMarketPoint() {
+        return ocappiMarketPoint;
     }
 
     public CoreValidIntradayFileResource getPra() {

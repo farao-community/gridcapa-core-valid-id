@@ -13,6 +13,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: AT
     - name: Belgique
       ramcep2-code: BE
       flowbased-code: PTDF_BE
@@ -21,6 +22,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: BE
     - name: République Tchéque
       ramcep2-code: CZ
       flowbased-code: PTDF_CZ
@@ -29,6 +31,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: CZ
     - name: Allemagne
       ramcep2-code: DE
       flowbased-code: PTDF_DE
@@ -37,6 +40,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: DE
     - name: France
       ramcep2-code: FR
       flowbased-code: PTDF_FR
@@ -45,6 +49,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: FR
     - name: Croatie
       ramcep2-code: HR
       flowbased-code: PTDF_HR
@@ -53,6 +58,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: HR
     - name: Hongrie
       ramcep2-code: HU
       flowbased-code: PTDF_HU
@@ -61,6 +67,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: HU
     - name: Pays-Bas
       ramcep2-code: NL
       flowbased-code: PTDF_NL
@@ -69,6 +76,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: NL
     - name: Pologne
       ramcep2-code: PL
       flowbased-code: PTDF_PL
@@ -77,6 +85,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: PL
     - name: Roumanie
       ramcep2-code: RO
       flowbased-code: PTDF_RO
@@ -85,6 +94,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: RO
     - name: Slovénie
       ramcep2-code: SI
       flowbased-code: PTDF_SI
@@ -93,6 +103,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: SI
     - name: Slovaquie
       ramcep2-code: SK
       flowbased-code: PTDF_SK
@@ -101,6 +112,7 @@ core-valid-commons:
       is-hvdc-hub: false
       is-ahc-hub: false
       coefficient: 1
+      country: SK
     - name: Hub Belgique AleGro
       ramcep2-code: BE_ALEGrO
       flowbased-code: PTDF_BE_AL
@@ -109,6 +121,7 @@ core-valid-commons:
       is-hvdc-hub: true
       is-ahc-hub: false
       coefficient: 1
+      country: BE
     - name: Hub Allemagne AleGro
       ramcep2-code: DE_ALEGrO
       flowbased-code: PTDF_DE_AL
@@ -117,3 +130,4 @@ core-valid-commons:
       is-hvdc-hub: true
       is-ahc-hub: false
       coefficient: 1
+      country: DE

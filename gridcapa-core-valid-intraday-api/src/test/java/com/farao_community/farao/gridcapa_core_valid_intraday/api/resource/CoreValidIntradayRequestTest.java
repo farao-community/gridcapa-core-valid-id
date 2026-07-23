@@ -29,6 +29,7 @@ class CoreValidIntradayRequestTest {
     private CoreValidIntradayFileResource glsk;
     private CoreValidIntradayFileResource mergedCnec;
     private CoreValidIntradayFileResource marketPoint;
+    private CoreValidIntradayFileResource ocappiMarketPoint;
     private CoreValidIntradayFileResource pra;
     private OffsetDateTime dateTime;
 
@@ -40,13 +41,14 @@ class CoreValidIntradayRequestTest {
         glsk = new CoreValidIntradayFileResource("glsk.txt", "http://path/to/glsk/file");
         mergedCnec = new CoreValidIntradayFileResource("mergedCnec.txt", "http://path/to/mergedCnec/file");
         marketPoint = new CoreValidIntradayFileResource("marketPoint.txt", "http://path/to/marketPoint/file");
+        ocappiMarketPoint = new CoreValidIntradayFileResource("ocappiMarketPoint.txt", "http://path/to/ocappiMarketPoint/file");
         pra = new CoreValidIntradayFileResource("pra.txt", "http://path/to/pra/file");
         dateTime = OffsetDateTime.parse("2025-10-01T00:30Z");
     }
 
     @Test
     void checkManualCoreValidRequest() {
-        CoreValidIntradayRequest coreValidIntradayRequest = new CoreValidIntradayRequest("id", "runId", dateTime, cnecRam, vertices, cgm, glsk, mergedCnec, marketPoint, pra);
+        CoreValidIntradayRequest coreValidIntradayRequest = new CoreValidIntradayRequest("id", "runId", dateTime, cnecRam, vertices, cgm, glsk, mergedCnec, marketPoint, ocappiMarketPoint, pra);
         assertNotNull(coreValidIntradayRequest);
         assertEquals("id", coreValidIntradayRequest.getId());
         assertEquals("runId", coreValidIntradayRequest.getCurrentRunId());
@@ -57,6 +59,7 @@ class CoreValidIntradayRequestTest {
         assertEquals("glsk.txt", coreValidIntradayRequest.getGlsk().getFilename());
         assertEquals("mergedCnec.txt", coreValidIntradayRequest.getMergedCnec().getFilename());
         assertEquals("marketPoint.txt", coreValidIntradayRequest.getMarketPoint().getFilename());
+        assertEquals("ocappiMarketPoint.txt", coreValidIntradayRequest.getOcappiMarketPoint().getFilename());
         assertEquals("pra.txt", coreValidIntradayRequest.getPra().getFilename());
         assertEquals("http://path/to/mergedCnec/file", coreValidIntradayRequest.getMergedCnec().getUrl());
         assertFalse(coreValidIntradayRequest.getLaunchedAutomatically());
@@ -64,7 +67,7 @@ class CoreValidIntradayRequestTest {
 
     @Test
     void checkAutoCoreValidRequest() {
-        CoreValidIntradayRequest coreValidIntradayRequest = new CoreValidIntradayRequest("id", "runId", dateTime, cnecRam, vertices, cgm, glsk, mergedCnec, marketPoint, pra, true);
+        CoreValidIntradayRequest coreValidIntradayRequest = new CoreValidIntradayRequest("id", "runId", dateTime, cnecRam, vertices, cgm, glsk, mergedCnec, marketPoint, ocappiMarketPoint, pra, true);
         assertTrue(coreValidIntradayRequest.getLaunchedAutomatically());
     }
 
