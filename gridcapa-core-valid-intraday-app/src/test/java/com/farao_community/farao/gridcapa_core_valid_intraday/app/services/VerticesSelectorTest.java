@@ -65,6 +65,15 @@ class VerticesSelectorTest {
 
     }
 
+    @Test
+    void shouldSelectClosestByAngle() {
+        final List<Vertex> selectedVertice = selector.selectClosestVerticesByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg(), 3);
+        assertThat(getIds(selectedVertice)).containsExactly(1);
+
+        final List<Vertex> selectedVertices = selector.selectClosestVerticesByAngle(getTestVertices(), getTestRefProg(), 3);
+        assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4);
+    }
+
     private ReferenceProgram getTestRefProg() {
         // net positions : AA = -300 , BB = 600, CC = -300
         return new TestRefProg();
