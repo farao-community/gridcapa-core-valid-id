@@ -95,20 +95,14 @@ public class VerticesSelector {
     /**
      * @param projectedVertices all considered vertices
      * @param referenceProgram  contains the market positions
-     * @param n                 how many vertices we want to select
      * @return the nth vertices closest to the global market position by angle
      */
     public List<Vertex> selectClosestVerticesByAngle(final List<Vertex> projectedVertices,
-                                              final ReferenceProgram referenceProgram,
-                                              final int n) {
+                                              final ReferenceProgram referenceProgram) {
 
-        if (projectedVertices.size() <= n) {
-            return projectedVertices;
-        }
         return projectedVertices.stream()
                 .map(v -> vertexAndMarketAngleDistance(referenceProgram, v))
                 .sorted((p1, p2) -> p2.getRight().compareTo(p1.getRight()))
-                .limit(n)
                 .map(Pair::getLeft)
                 .toList();
     }

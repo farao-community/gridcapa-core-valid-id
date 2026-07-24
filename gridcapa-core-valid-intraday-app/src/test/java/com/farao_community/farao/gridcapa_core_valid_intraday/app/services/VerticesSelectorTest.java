@@ -67,18 +67,17 @@ class VerticesSelectorTest {
 
     @Test
     void shouldSelectClosestByAngle() {
-        final List<Vertex> selectedVertice = selector.selectClosestVerticesByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg(), 3);
+        final List<Vertex> selectedVertice = selector.selectClosestVerticesByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg());
         assertThat(getIds(selectedVertice)).containsExactly(1);
 
-        final List<Vertex> selectedVertices = selector.selectClosestVerticesByAngle(getTestVertices(), getTestRefProg(), 3);
-        assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4);
+        final List<Vertex> selectedVertices = selector.selectClosestVerticesByAngle(getTestVertices(), getTestRefProg());
+        assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4, 3, 2);
 
         final List<Vertex> angleOnlySelection = selector.selectClosestVerticesByAngle(
                 List.of(new Vertex(6, Map.of("AA", -600, "BB", 1200, "CC", -600)),
                         new Vertex(7, Map.of("AA", -300, "BB", 600, "CC", 0))),
-                getTestRefProg(),
-                1);
-        assertThat(getIds(angleOnlySelection)).containsExactly(6);
+                getTestRefProg());
+        assertThat(getIds(angleOnlySelection)).containsExactly(6, 7);
     }
 
     private ReferenceProgram getTestRefProg() {
