@@ -95,7 +95,7 @@ public class VerticesSelector {
     /**
      * @param projectedVertices all considered vertices
      * @param referenceProgram  contains the market positions
-     * @return the nth vertices closest to the global market position by angle
+     * @return vertices ordered by closest to the global market position by angle
      */
     public List<Vertex> selectClosestVerticesByAngle(final List<Vertex> projectedVertices,
                                               final ReferenceProgram referenceProgram) {
