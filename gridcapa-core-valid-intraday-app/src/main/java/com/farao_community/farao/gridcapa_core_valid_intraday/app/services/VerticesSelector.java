@@ -31,6 +31,7 @@ import static java.util.Comparator.comparingDouble;
 
 public class VerticesSelector {
     private static final Comparator<CnecVertexRamData> COMPARATOR = Comparator.comparingInt(CnecVertexRamData::ram);
+    private static final Comparator<Map.Entry<Vertex, Double>> COMPARATOR_SYNTHESIS = Comparator.comparingDouble(Map.Entry::getValue);
     private final List<CoreHub> coreHubs;
 
     public VerticesSelector(final CoreHubsConfiguration coreHubsConfiguration) {
@@ -175,7 +176,7 @@ public class VerticesSelector {
                 .toList();
         fillVertexPonderationMap(constrainedVertices, constrainedPonderation, vertexIdToPonderation);
         return vertexIdToPonderation.entrySet().stream()
-                .sorted(comparingDouble(Map.Entry::getValue))
+                .sorted(COMPARATOR_SYNTHESIS.thenComparingInt(e -> e.getKey().vertexId()))
                 .limit(n)
                 .map(Map.Entry::getKey)
                 .toList();

@@ -98,6 +98,14 @@ class VerticesSelectorTest {
         assertThat(getIds(rankedVertices)).isNotEmpty()
                 .hasSize(5)
                 .containsExactly(2, 1, 4, 3, 5);
+
+        final List<Vertex> rankedVertices2 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+                                                                        getOrderedVertice1Reversed(), 0.33,
+                                                                        getOrderedVertice3Empty(), 0.34,
+                                                                        5);
+        assertThat(getIds(rankedVertices2)).isNotEmpty()
+                .hasSize(5)
+                .containsExactly(1, 2, 3, 4, 5);
     }
 
     private static class TestRefProg extends ReferenceProgram {
@@ -154,6 +162,14 @@ class VerticesSelectorTest {
                        new Vertex(5, Map.of()));
     }
 
+    private List<Vertex> getOrderedVertice1Reversed() {
+        return List.of(new Vertex(5, Map.of()),
+                       new Vertex(4, Map.of()),
+                       new Vertex(3, Map.of()),
+                       new Vertex(2, Map.of()),
+                       new Vertex(1, Map.of()));
+    }
+
     private List<Vertex> getOrderedVertice2() {
         return List.of(
                        new Vertex(2, Map.of()),
@@ -170,6 +186,10 @@ class VerticesSelectorTest {
                 new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(1, Map.of()), 0),
                 new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(3, Map.of()), 0),
                 new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(5, Map.of()), 0));
+    }
+
+    private List<CnecVertexRamData> getOrderedVertice3Empty() {
+        return List.of();
     }
 
     private CnecRamBranchData getEmptyCnecRamData() {
