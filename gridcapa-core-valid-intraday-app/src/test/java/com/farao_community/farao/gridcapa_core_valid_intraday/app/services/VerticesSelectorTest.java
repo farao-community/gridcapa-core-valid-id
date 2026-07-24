@@ -28,28 +28,10 @@ class VerticesSelectorTest {
     private final VerticesSelector selector = new VerticesSelector(new TestCoreHubConf());
 
     @Test
-    void shouldSelectWithNSphere() {
-
-        final List<Vertex> twoVertices = selector.selectVerticesWithinNSphere(getTestVertices(),
-                                                                              getTestRefProg(),
-                                                                              10.0,
-                                                                              3);
-
-        final List<Vertex> fourVerticesReducedToThree = selector.selectVerticesWithinNSphere(getTestVertices(),
-                                                                                             getTestRefProg(),
-                                                                                             1000.0,
-                                                                                             3);
-
-        assertThat(getIds(twoVertices)).containsExactlyInAnyOrder(1, 5);
-
-        assertThat(getIds(fourVerticesReducedToThree)).containsExactlyInAnyOrder(1, 4, 5);
-    }
-
-    @Test
     void shouldSelectClosest() {
-        final List<Vertex> selectedVertices = selector.selectClosestVertices(getTestVertices(), getTestRefProg(), 2);
+        final List<Vertex> selectedVertices = selector.selectClosestVertices(getTestVertices(), getTestRefProg());
 
-        assertThat(getIds(selectedVertices)).containsExactlyInAnyOrder(1, 5);
+        assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4, 3, 2);
     }
 
     @Test
@@ -57,9 +39,8 @@ class VerticesSelectorTest {
         final CnecRamBranchData cnec1 = new CnecRamBranchData("id1", 1450, 157, Map.of("fb1", BigDecimal.valueOf(.3345), "fb2", BigDecimal.valueOf(0.156), "fb3", BigDecimal.valueOf(.78)));
         final CnecRamBranchData cnec2 = new CnecRamBranchData("id2", 3450, 257, Map.of("fb1", BigDecimal.valueOf(.345), "fb2", BigDecimal.valueOf(0.256), "fb3", BigDecimal.valueOf(.78)));
 
-        final int nbVertices = 3;
-        final List<CnecVertexRamData> selectedVertices = selector.selectConstrainedVertices(getTestVertices2(), List.of(cnec1, cnec2), nbVertices);
-        assertThat(selectedVertices).hasSize(nbVertices);
+        final List<CnecVertexRamData> selectedVertices = selector.selectConstrainedVertices(getTestVertices2(), List.of(cnec1, cnec2));
+        assertThat(selectedVertices).hasSize(5);
         assertThat(selectedVertices.getFirst().ram()).isLessThanOrEqualTo(selectedVertices.getLast().ram());
         assertThat(selectedVertices.getFirst().ram()).isEqualTo(251);
 

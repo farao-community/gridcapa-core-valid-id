@@ -39,56 +39,16 @@ public class VerticesSelector {
     }
 
     /**
-     *
      * @param projectedVertices all considered vertices
      * @param referenceProgram  contains the market positions
-     * @param radius            the n-sphere radius
-     * @param maxNbVertices        how many vertices do we want
-     * @return selected vertices with n-sphere method
-     */
-    public List<Vertex> selectVerticesWithinNSphere(final List<Vertex> projectedVertices,
-                                                    final ReferenceProgram referenceProgram,
-                                                    final double radius,
-                                                    final int maxNbVertices) {
-
-        if (projectedVertices.size() <= maxNbVertices) {
-            return projectedVertices;
-        }
-
-        final List<Vertex> verticesInSphere = projectedVertices
-            .stream()
-            .filter(vertex -> isInNSphere(vertex, referenceProgram, radius))
-            .toList();
-
-        if (verticesInSphere.isEmpty()) {
-            return selectClosestVertices(projectedVertices, referenceProgram, maxNbVertices);
-        } else if (verticesInSphere.size() <= maxNbVertices) {
-            return verticesInSphere;
-        } else {
-            // too many vertices, we filter again
-            return selectClosestVertices(verticesInSphere, referenceProgram, maxNbVertices);
-        }
-
-    }
-
-    /**
-     * @param projectedVertices all considered vertices
-     * @param referenceProgram  contains the market positions
-     * @param n                 is how many vertices we want to select
-     * @return the nth vertices closest to the global market position
+     * @return the vertices ordered by closest to the global market position
      */
     public List<Vertex> selectClosestVertices(final List<Vertex> projectedVertices,
-                                              final ReferenceProgram referenceProgram,
-                                              final int n) {
-
-        if (projectedVertices.size() <= n) {
-            return projectedVertices;
-        }
+                                              final ReferenceProgram referenceProgram) {
 
         return projectedVertices.stream()
             .map(v -> vertexAndMarketDistance(referenceProgram, v))
             .sorted(comparingDouble(Pair::getRight))
-            .limit(n)
             .map(Pair::getLeft)
             .toList();
 
@@ -113,12 +73,10 @@ public class VerticesSelector {
      *
      * @param vertices              all considered vertices
      * @param cnecRamBranchDatas    all considered CNECs
-     * @param maxNbVertices            the maximum number of constrained vertices to return
-     * @return the list of maxNbVertices constrained vertices with the most constrained CNEC and its calculated constrained RAM
+     * @return the list of ordered constrained vertices with the most constrained CNEC and its calculated constrained RAM
      */
     public List<CnecVertexRamData> selectConstrainedVertices(final List<Vertex> vertices,
-                                                             final List<CnecRamBranchData> cnecRamBranchDatas,
-                                                             final int maxNbVertices) {
+                                                             final List<CnecRamBranchData> cnecRamBranchDatas) {
 
         final Map<String, String> flowBasedToVertexCodeMap = CoreHubUtils.getFlowBasedToVertexCodeMap(coreHubs);
         final List<CnecVertexRamData> constrainedOrderedVertices = new ArrayList<>();
@@ -145,7 +103,6 @@ public class VerticesSelector {
         }
         return constrainedOrderedVertices.stream()
                                          .sorted(COMPARATOR)
-                                         .limit(maxNbVertices)
                                          .toList();
     }
 
@@ -158,7 +115,7 @@ public class VerticesSelector {
      * @param constrainedSelection      the list of vertices returned from selectConstrainedVertices
      * @param constrainedPonderation    the ponderation to apply
      * @param n                         the maximum number of selected vertices to return
-     * @return The list of vertices through ponderated selection
+     * @return The ordered list of n vertices through ponderated selection
      */
     public List<Vertex> selectionSynthesis(final List<Vertex> closestSelection,
                                            final double closestPonderation,

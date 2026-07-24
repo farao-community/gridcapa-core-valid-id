@@ -65,7 +65,6 @@ public class CoreValidIntradayHandler {
         //TODO calculate IVA stuff
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam), coreHubsConfiguration.getCoreHubs());
         final VerticesSelector verticesSelector = new VerticesSelector(coreHubsConfiguration);
-        final List<Vertex> vertices = verticesSelector.selectVerticesWithinNSphere(projectedVertices, marketPoints, SELECTED_CONTROL_ZONE_SIZE, MAX_SELECTED_VERTICES);
 
         //TODO output IVAs
         return coreValidIntradayRequest.getId();
