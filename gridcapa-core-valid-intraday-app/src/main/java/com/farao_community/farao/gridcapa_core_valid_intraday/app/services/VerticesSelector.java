@@ -17,6 +17,7 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecVer
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,9 +30,12 @@ import java.util.Map;
 
 import static java.util.Comparator.comparingDouble;
 
+@Service
 public class VerticesSelector {
-    private static final Comparator<CnecVertexRamData> COMPARATOR = Comparator.comparingInt(CnecVertexRamData::ram);
-    private static final Comparator<Map.Entry<Vertex, Double>> COMPARATOR_SYNTHESIS = Comparator.comparingDouble(Map.Entry::getValue);
+
+    private static final Comparator<CnecVertexRamData> ORDER_BY_RAM = Comparator.comparingInt(CnecVertexRamData::ram);
+    private static final Comparator<Map.Entry<Vertex, Double>> ORDER_MAP_ENTRY_INT = Comparator.comparingDouble(Map.Entry::getValue);
+    private static final Comparator<Map.Entry<Vertex, Double>> ORDER_BY_PONDERATION = ORDER_MAP_ENTRY_INT.thenComparingInt(e -> e.getKey().vertexId());
     private final List<CoreHub> coreHubs;
 
     public VerticesSelector(final CoreHubsConfiguration coreHubsConfiguration) {
@@ -71,16 +75,16 @@ public class VerticesSelector {
 
     /**
      *
-     * @param vertices              all considered vertices
+     * @param projectedVertices     all considered projectedVertices
      * @param cnecRamBranchDatas    all considered CNECs
-     * @return the list of ordered constrained vertices with the most constrained CNEC and its calculated constrained RAM
+     * @return the list of ordered constrained projectedVertices with the most constrained CNEC and its calculated constrained RAM
      */
-    public List<CnecVertexRamData> selectConstrainedVertices(final List<Vertex> vertices,
+    public List<CnecVertexRamData> selectConstrainedVertices(final List<Vertex> projectedVertices,
                                                              final List<CnecRamBranchData> cnecRamBranchDatas) {
 
         final Map<String, String> flowBasedToVertexCodeMap = CoreHubUtils.getFlowBasedToVertexCodeMap(coreHubs);
         final List<CnecVertexRamData> constrainedOrderedVertices = new ArrayList<>();
-        for (final Vertex vertex : vertices) {
+        for (final Vertex vertex : projectedVertices) {
             final List<CnecVertexRamData> vertexRamsByCnec = new ArrayList<>();
             for (final CnecRamBranchData branch : cnecRamBranchDatas) {
                 final BigDecimal cnecVertexFlow = VerticesUtils.f0Core(vertex, branch, flowBasedToVertexCodeMap);
@@ -92,7 +96,7 @@ public class VerticesSelector {
             //for a given vertex get the lowest ram giving the most constrained CNEC
             if (!vertexRamsByCnec.isEmpty()) {
                 final CnecVertexRamData minRamCnec = vertexRamsByCnec.stream()
-                        .min(COMPARATOR)
+                        .min(ORDER_BY_RAM)
                         .orElseThrow(
                                 () -> new CoreValidIntradayInvalidDataException(
                                         String.format("Impossible to find worse CNEC for vertex id %s", vertex.vertexId())
@@ -102,7 +106,7 @@ public class VerticesSelector {
             }
         }
         return constrainedOrderedVertices.stream()
-                                         .sorted(COMPARATOR)
+                                         .sorted(ORDER_BY_RAM)
                                          .toList();
     }
 
@@ -133,7 +137,7 @@ public class VerticesSelector {
                 .toList();
         fillVertexPonderationMap(constrainedVertices, constrainedPonderation, vertexIdToPonderation);
         return vertexIdToPonderation.entrySet().stream()
-                .sorted(COMPARATOR_SYNTHESIS.thenComparingInt(e -> e.getKey().vertexId()))
+                .sorted(ORDER_BY_PONDERATION)
                 .limit(n)
                 .map(Map.Entry::getKey)
                 .toList();
