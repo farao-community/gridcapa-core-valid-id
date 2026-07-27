@@ -151,18 +151,6 @@ public class VerticesSelector {
     }
 
     /**
-     * @param vertex           the considered vertex
-     * @param referenceProgram contains the market positions
-     * @param radius           n-dimension sphere radius, input by user
-     * @return if a vertex is within an n-sphere centered on market positions
-     */
-    private boolean isInNSphere(final Vertex vertex,
-                                final ReferenceProgram referenceProgram,
-                                final double radius) {
-        return vertexAndMarketDistance(referenceProgram, vertex).getRight() <= radius;
-    }
-
-    /**
      * we return a pair because we want to be able to sort by distance but still keep the vertex data
      *
      * @param referenceProgram contains the market positions
