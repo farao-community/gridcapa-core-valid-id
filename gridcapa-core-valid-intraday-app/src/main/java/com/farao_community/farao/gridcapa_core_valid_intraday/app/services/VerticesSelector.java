@@ -93,6 +93,21 @@ public class VerticesSelector {
     }
 
     /**
+     * @param projectedVertices all considered vertices
+     * @param referenceProgram  contains the market positions
+     * @return vertices ordered by closest to the global market position by angle
+     */
+    public List<Vertex> selectClosestVerticesByAngle(final List<Vertex> projectedVertices,
+                                              final ReferenceProgram referenceProgram) {
+
+        return projectedVertices.stream()
+                .map(v -> vertexAndMarketAngleDistance(referenceProgram, v))
+                .sorted((p1, p2) -> p2.getRight().compareTo(p1.getRight()))
+                .map(Pair::getLeft)
+                .toList();
+    }
+
+    /**
      *
      * @param vertices              all considered vertices
      * @param cnecRamBranchDatas    all considered CNECs
@@ -174,5 +189,40 @@ public class VerticesSelector {
         }
 
         return Pair.of(vertex, Math.sqrt(sumOfWeightedSquared));
+    }
+
+    /**
+     * we return a pair because we want to be able to sort by distance but still keep the vertex data
+     *
+     * @param referenceProgram contains the market positions
+     * @param vertex           the considered vertex
+     * @return the vertex and its distance from the market by direction and angle (uses cosinus)
+     */
+    private Pair<Vertex, Double> vertexAndMarketAngleDistance(final ReferenceProgram referenceProgram,
+                                                              final Vertex vertex) {
+
+        final Map<String, Integer> vertexPositions = vertex.coordinates();
+
+        // angle's cosinus = (scalar product of refprog . vertex) divided by (euclidian norm of refprog by vertex)
+        double scalarProduct = 0.0;
+        double normVertex = 0.0;
+        double normMarket = 0.0;
+        for (final CoreHub hub : coreHubs) {
+            final Double marketPos = referenceProgram.getGlobalNetPosition(new EICode(hub.country()));
+            final Integer vertexPos = vertexPositions.get(hub.clusterVerticeCode());
+
+            if (vertexPos == null) {
+                throw new IllegalStateException(
+                        String.format("Vertex %d missing required coordinate for hub %s / %s",
+                                      vertex.vertexId(), hub.forecastCode(), hub.clusterVerticeCode()));
+            }
+            scalarProduct += marketPos * vertexPos;
+            normMarket += marketPos * marketPos;
+            final double vertexPosition = vertexPos;
+            normVertex += vertexPosition * vertexPosition;
+        }
+        final double cosinus = scalarProduct / (Math.sqrt(normMarket) * Math.sqrt(normVertex));
+
+        return Pair.of(vertex, cosinus);
     }
 }
