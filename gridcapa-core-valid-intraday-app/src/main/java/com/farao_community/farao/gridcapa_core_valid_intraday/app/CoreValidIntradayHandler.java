@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,6 +10,7 @@ import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsCo
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.VerticesUtils;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayRequest;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRamBranchData;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.CnecRamMapper;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.FileImporter;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.VerticesSelector;
@@ -34,15 +35,16 @@ public class CoreValidIntradayHandler {
 
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd' 'HH:mm");
     //TODO replace with parameters
-    private static final int MAX_SELECTED_VERTICES = 5;
-    private static final int SELECTED_CONTROL_ZONE_SIZE = 500;
+    private static final int MAX_SELECTED_VERTICES = 6;
     private static final String RTE_EI_CODE = "10YFR-RTE------C";
 
     private final FileImporter fileImporter;
+    private final VerticesSelector verticesSelector;
     private final CoreHubsConfiguration coreHubsConfiguration;
 
-    public CoreValidIntradayHandler(final FileImporter fileImporter, final CoreHubsConfiguration coreHubsConfiguration) {
+    public CoreValidIntradayHandler(final FileImporter fileImporter, final VerticesSelector verticesSelector, final CoreHubsConfiguration coreHubsConfiguration) {
         this.fileImporter = fileImporter;
+        this.verticesSelector = verticesSelector;
         this.coreHubsConfiguration = coreHubsConfiguration;
     }
 
@@ -62,11 +64,15 @@ public class CoreValidIntradayHandler {
                     .put(new EICode(RTE_EI_CODE),
                          fileImporter.importAggregatedScheduleFile(coreValidIntradayRequest.getOcappiMarketPoint(), targetProcessDateTime).doubleValue());
         }
+        //TODO select vertices
+        final List<CnecRamBranchData> cnecRamBranchData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam);
+        final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, cnecRamBranchData, coreHubsConfiguration.getCoreHubs());
+        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(
+                verticesSelector.orderByClosestVertices(projectedVertices, marketPoints), 0.33,
+                verticesSelector.orderByClosestVerticesByAngle(projectedVertices, marketPoints), 0.33,
+                verticesSelector.orderByConstrainedVertices(projectedVertices, cnecRamBranchData), 0.34,
+                MAX_SELECTED_VERTICES);
         //TODO calculate IVA stuff
-        final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam), coreHubsConfiguration.getCoreHubs());
-        final VerticesSelector verticesSelector = new VerticesSelector(coreHubsConfiguration);
-        final List<Vertex> vertices = verticesSelector.selectVerticesWithinNSphere(projectedVertices, marketPoints, SELECTED_CONTROL_ZONE_SIZE, MAX_SELECTED_VERTICES);
-
         //TODO output IVAs
         return coreValidIntradayRequest.getId();
     }

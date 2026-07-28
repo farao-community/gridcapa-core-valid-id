@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -28,52 +28,33 @@ class VerticesSelectorTest {
     private final VerticesSelector selector = new VerticesSelector(new TestCoreHubConf());
 
     @Test
-    void shouldSelectWithNSphere() {
+    void shouldOrderByClosest() {
+        final List<Vertex> selectedVertices = selector.orderByClosestVertices(getTestVertices(), getTestRefProg());
 
-        final List<Vertex> twoVertices = selector.selectVerticesWithinNSphere(getTestVertices(),
-                                                                              getTestRefProg(),
-                                                                              10.0,
-                                                                              3);
-
-        final List<Vertex> fourVerticesReducedToThree = selector.selectVerticesWithinNSphere(getTestVertices(),
-                                                                                             getTestRefProg(),
-                                                                                             1000.0,
-                                                                                             3);
-
-        assertThat(getIds(twoVertices)).containsExactlyInAnyOrder(1, 5);
-
-        assertThat(getIds(fourVerticesReducedToThree)).containsExactlyInAnyOrder(1, 4, 5);
+        assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4, 3, 2);
     }
 
     @Test
-    void shouldSelectClosest() {
-        final List<Vertex> selectedVertices = selector.selectClosestVertices(getTestVertices(), getTestRefProg(), 2);
-
-        assertThat(getIds(selectedVertices)).containsExactlyInAnyOrder(1, 5);
-    }
-
-    @Test
-    void shouldSelectConstrained() {
+    void shouldOrderByConstrained() {
         final CnecRamBranchData cnec1 = new CnecRamBranchData("id1", 1450, 157, Map.of("fb1", BigDecimal.valueOf(.3345), "fb2", BigDecimal.valueOf(0.156), "fb3", BigDecimal.valueOf(.78)));
         final CnecRamBranchData cnec2 = new CnecRamBranchData("id2", 3450, 257, Map.of("fb1", BigDecimal.valueOf(.345), "fb2", BigDecimal.valueOf(0.256), "fb3", BigDecimal.valueOf(.78)));
 
-        final int nbVertices = 3;
-        final List<CnecVertexRamData> selectedVertices = selector.selectConstrainedVertices(getTestVertices2(), List.of(cnec1, cnec2), nbVertices);
-        assertThat(selectedVertices).hasSize(nbVertices);
+        final List<CnecVertexRamData> selectedVertices = selector.orderByConstrainedVertices(getTestVertices2(), List.of(cnec1, cnec2));
+        assertThat(selectedVertices).hasSize(5);
         assertThat(selectedVertices.getFirst().ram()).isLessThanOrEqualTo(selectedVertices.getLast().ram());
         assertThat(selectedVertices.getFirst().ram()).isEqualTo(251);
 
     }
 
     @Test
-    void shouldSelectClosestByAngle() {
-        final List<Vertex> selectedVertice = selector.selectClosestVerticesByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg());
+    void shouldOrderByClosestByAngle() {
+        final List<Vertex> selectedVertice = selector.orderByClosestVerticesByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg());
         assertThat(getIds(selectedVertice)).containsExactly(1);
 
-        final List<Vertex> selectedVertices = selector.selectClosestVerticesByAngle(getTestVertices(), getTestRefProg());
+        final List<Vertex> selectedVertices = selector.orderByClosestVerticesByAngle(getTestVertices(), getTestRefProg());
         assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4, 3, 2);
 
-        final List<Vertex> angleOnlySelection = selector.selectClosestVerticesByAngle(
+        final List<Vertex> angleOnlySelection = selector.orderByClosestVerticesByAngle(
                 List.of(new Vertex(6, Map.of("AA", -600, "BB", 1200, "CC", -600)),
                         new Vertex(7, Map.of("AA", -300, "BB", 600, "CC", 0))),
                 getTestRefProg());
@@ -87,6 +68,45 @@ class VerticesSelectorTest {
 
     private static List<Integer> getIds(final List<Vertex> vertices) {
         return vertices.stream().map(Vertex::vertexId).toList();
+    }
+
+    @Test
+    void selectionSynthesis() {
+        final List<Vertex> rankedVertices1 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+                                                                         getOrderedVertice2(), 0.33,
+                                                                         getOrderedVertice3(), 0.34,
+                                                                         3);
+        assertThat(getIds(rankedVertices1))
+                .isNotEmpty()
+                .hasSize(3)
+                .containsExactly(2, 1, 4);
+
+        final List<Vertex> rankedVertices2 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+                                                                         getOrderedVertice2(), 0.33,
+                                                                         getOrderedVertice3(), 0.34,
+                                                                         5);
+        assertThat(getIds(rankedVertices2))
+                .isNotEmpty()
+                .hasSize(5)
+                .containsExactly(2, 1, 4, 3, 5);
+
+        final List<Vertex> rankedVertices3 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+                                                                         getOrderedVertice1Reversed(), 0.33,
+                                                                         getOrderedVertice3Empty(), 0.34,
+                                                                         5);
+        assertThat(getIds(rankedVertices3))
+                .isNotEmpty()
+                .hasSize(5)
+                .containsExactly(1, 2, 3, 4, 5);
+
+        final List<Vertex> rankedVertices4 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+                                                                         getOrderedVertice1Reversed(), 0.33,
+                                                                         getOrderedVertice3Empty(), 0.34,
+                                                                         2);
+        assertThat(getIds(rankedVertices4))
+                .isNotEmpty()
+                .hasSize(2)
+                .containsExactly(1, 2);
     }
 
     private static class TestRefProg extends ReferenceProgram {
@@ -112,9 +132,9 @@ class VerticesSelectorTest {
         @Override
         public List<CoreHub> getCoreHubs() {
             return List.of(
-                new CoreHub("Test1", "ram1", "fb1", "FR-CORE", "AA", false, false, 1, Country.FR),
-                new CoreHub("Test2", "ram2", "fb2", "DE-CORE", "BB", false, false, 1, Country.DE),
-                new CoreHub("Test3", "ram3", "fb3", "BE-CORE", "CC", false, false, 1, Country.BE)
+                    new CoreHub("Test1", "ram1", "fb1", "FR-CORE", "AA", false, false, 1, Country.FR),
+                    new CoreHub("Test2", "ram2", "fb2", "DE-CORE", "BB", false, false, 1, Country.DE),
+                    new CoreHub("Test3", "ram3", "fb3", "BE-CORE", "CC", false, false, 1, Country.BE)
             );
         }
     }
@@ -135,4 +155,45 @@ class VerticesSelectorTest {
                        new Vertex(5, Map.of("AA", -299, "BB", 600, "CC", 300)));
     }
 
+    private List<Vertex> getOrderedVertice1() {
+        return List.of(new Vertex(1, Map.of()),
+                       new Vertex(2, Map.of()),
+                       new Vertex(3, Map.of()),
+                       new Vertex(4, Map.of()),
+                       new Vertex(5, Map.of()));
+    }
+
+    private List<Vertex> getOrderedVertice1Reversed() {
+        return List.of(new Vertex(5, Map.of()),
+                       new Vertex(4, Map.of()),
+                       new Vertex(3, Map.of()),
+                       new Vertex(2, Map.of()),
+                       new Vertex(1, Map.of()));
+    }
+
+    private List<Vertex> getOrderedVertice2() {
+        return List.of(
+                new Vertex(2, Map.of()),
+                new Vertex(3, Map.of()),
+                new Vertex(4, Map.of()),
+                new Vertex(1, Map.of()),
+                new Vertex(5, Map.of()));
+    }
+
+    private List<CnecVertexRamData> getOrderedVertice3() {
+        return List.of(
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(2, Map.of()), 0),
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(4, Map.of()), 0),
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(1, Map.of()), 0),
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(3, Map.of()), 0),
+                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(5, Map.of()), 0));
+    }
+
+    private List<CnecVertexRamData> getOrderedVertice3Empty() {
+        return List.of();
+    }
+
+    private CnecRamBranchData getEmptyCnecRamData() {
+        return new CnecRamBranchData("BRANCH_ID", 0, 0, Map.of());
+    }
 }

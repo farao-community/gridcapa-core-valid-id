@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -17,19 +17,25 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecVer
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.Comparator.comparingDouble;
 
+@Service
 public class VerticesSelector {
-    private static final Comparator<CnecVertexRamData> COMPARATOR = Comparator.comparingInt(CnecVertexRamData::ram);
+
+    private static final Comparator<CnecVertexRamData> ORDER_BY_RAM = Comparator.comparingInt(CnecVertexRamData::ram);
+    private static final Comparator<Map.Entry<Vertex, Double>> ORDER_MAP_ENTRY_DOUBLE = Comparator.comparingDouble(Map.Entry::getValue);
+    private static final Comparator<Map.Entry<Vertex, Double>> ORDER_BY_PONDERATION = ORDER_MAP_ENTRY_DOUBLE.thenComparingInt(e -> e.getKey().vertexId());
     private final List<CoreHub> coreHubs;
 
     public VerticesSelector(final CoreHubsConfiguration coreHubsConfiguration) {
@@ -37,56 +43,16 @@ public class VerticesSelector {
     }
 
     /**
-     *
      * @param projectedVertices all considered vertices
      * @param referenceProgram  contains the market positions
-     * @param radius            the n-sphere radius
-     * @param maxNbVertices        how many vertices do we want
-     * @return selected vertices with n-sphere method
+     * @return the vertices ordered by closest to the global market position
      */
-    public List<Vertex> selectVerticesWithinNSphere(final List<Vertex> projectedVertices,
-                                                    final ReferenceProgram referenceProgram,
-                                                    final double radius,
-                                                    final int maxNbVertices) {
-
-        if (projectedVertices.size() <= maxNbVertices) {
-            return projectedVertices;
-        }
-
-        final List<Vertex> verticesInSphere = projectedVertices
-            .stream()
-            .filter(vertex -> isInNSphere(vertex, referenceProgram, radius))
-            .toList();
-
-        if (verticesInSphere.isEmpty()) {
-            return selectClosestVertices(projectedVertices, referenceProgram, maxNbVertices);
-        } else if (verticesInSphere.size() <= maxNbVertices) {
-            return verticesInSphere;
-        } else {
-            // too many vertices, we filter again
-            return selectClosestVertices(verticesInSphere, referenceProgram, maxNbVertices);
-        }
-
-    }
-
-    /**
-     * @param projectedVertices all considered vertices
-     * @param referenceProgram  contains the market positions
-     * @param n                 is how many vertices we want to select
-     * @return the nth vertices closest to the global market position
-     */
-    public List<Vertex> selectClosestVertices(final List<Vertex> projectedVertices,
-                                              final ReferenceProgram referenceProgram,
-                                              final int n) {
-
-        if (projectedVertices.size() <= n) {
-            return projectedVertices;
-        }
+    public List<Vertex> orderByClosestVertices(final List<Vertex> projectedVertices,
+                                               final ReferenceProgram referenceProgram) {
 
         return projectedVertices.stream()
             .map(v -> vertexAndMarketDistance(referenceProgram, v))
             .sorted(comparingDouble(Pair::getRight))
-            .limit(n)
             .map(Pair::getLeft)
             .toList();
 
@@ -97,8 +63,8 @@ public class VerticesSelector {
      * @param referenceProgram  contains the market positions
      * @return vertices ordered by closest to the global market position by angle
      */
-    public List<Vertex> selectClosestVerticesByAngle(final List<Vertex> projectedVertices,
-                                              final ReferenceProgram referenceProgram) {
+    public List<Vertex> orderByClosestVerticesByAngle(final List<Vertex> projectedVertices,
+                                                      final ReferenceProgram referenceProgram) {
 
         return projectedVertices.stream()
                 .map(v -> vertexAndMarketAngleDistance(referenceProgram, v))
@@ -109,18 +75,16 @@ public class VerticesSelector {
 
     /**
      *
-     * @param vertices              all considered vertices
+     * @param projectedVertices     all considered projectedVertices
      * @param cnecRamBranchDatas    all considered CNECs
-     * @param maxNbVertices            the maximum number of constrained vertices to return
-     * @return the list of maxNbVertices constrained vertices with the most constrained CNEC and its calculated constrained RAM
+     * @return the list of ordered constrained projectedVertices with the most constrained CNEC and its calculated constrained RAM
      */
-    public List<CnecVertexRamData> selectConstrainedVertices(final List<Vertex> vertices,
-                                                             final List<CnecRamBranchData> cnecRamBranchDatas,
-                                                             final int maxNbVertices) {
+    public List<CnecVertexRamData> orderByConstrainedVertices(final List<Vertex> projectedVertices,
+                                                              final List<CnecRamBranchData> cnecRamBranchDatas) {
 
         final Map<String, String> flowBasedToVertexCodeMap = CoreHubUtils.getFlowBasedToVertexCodeMap(coreHubs);
         final List<CnecVertexRamData> constrainedOrderedVertices = new ArrayList<>();
-        for (final Vertex vertex : vertices) {
+        for (final Vertex vertex : projectedVertices) {
             final List<CnecVertexRamData> vertexRamsByCnec = new ArrayList<>();
             for (final CnecRamBranchData branch : cnecRamBranchDatas) {
                 final BigDecimal cnecVertexFlow = VerticesUtils.f0Core(vertex, branch, flowBasedToVertexCodeMap);
@@ -132,7 +96,7 @@ public class VerticesSelector {
             //for a given vertex get the lowest ram giving the most constrained CNEC
             if (!vertexRamsByCnec.isEmpty()) {
                 final CnecVertexRamData minRamCnec = vertexRamsByCnec.stream()
-                        .min(COMPARATOR)
+                        .min(ORDER_BY_RAM)
                         .orElseThrow(
                                 () -> new CoreValidIntradayInvalidDataException(
                                         String.format("Impossible to find worse CNEC for vertex id %s", vertex.vertexId())
@@ -142,21 +106,52 @@ public class VerticesSelector {
             }
         }
         return constrainedOrderedVertices.stream()
-                                         .sorted(COMPARATOR)
-                                         .limit(maxNbVertices)
+                                         .sorted(ORDER_BY_RAM)
                                          .toList();
     }
 
     /**
-     * @param vertex           the considered vertex
-     * @param referenceProgram contains the market positions
-     * @param radius           n-dimension sphere radius, input by user
-     * @return if a vertex is within an n-sphere centered on market positions
+     *
+     * @param closestSelection          the list of vertices returned from selectClosestVertices
+     * @param closestPonderation        the ponderation to apply
+     * @param angleSelection            the list of vertices returned from selectClosestVerticesByAngle
+     * @param anglePonderation          the ponderation to apply
+     * @param constrainedSelection      the list of vertices returned from selectConstrainedVertices
+     * @param constrainedPonderation    the ponderation to apply
+     * @param maxSelectedVertices       the maximum number of selected vertices to return
+     * @return The ordered list of maxSelectedVertices vertices through ponderated selection
      */
-    private boolean isInNSphere(final Vertex vertex,
-                                final ReferenceProgram referenceProgram,
-                                final double radius) {
-        return vertexAndMarketDistance(referenceProgram, vertex).getRight() <= radius;
+    public List<Vertex> selectionSynthesis(final List<Vertex> closestSelection,
+                                           final double closestPonderation,
+                                           final List<Vertex> angleSelection,
+                                           final double anglePonderation,
+                                           final List<CnecVertexRamData> constrainedSelection,
+                                           final double constrainedPonderation,
+                                           final int maxSelectedVertices) {
+
+        final Map<Vertex, Double> vertexIdToPonderation = new HashMap<>();
+        fillVertexPonderationMap(closestSelection, closestPonderation, vertexIdToPonderation);
+        fillVertexPonderationMap(angleSelection, anglePonderation, vertexIdToPonderation);
+        final List<Vertex> constrainedVertices = constrainedSelection.stream()
+                .map(CnecVertexRamData::vertex)
+                .toList();
+        fillVertexPonderationMap(constrainedVertices, constrainedPonderation, vertexIdToPonderation);
+        return vertexIdToPonderation.entrySet().stream()
+                .sorted(ORDER_BY_PONDERATION)
+                .limit(maxSelectedVertices)
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    private void fillVertexPonderationMap(final List<Vertex> vertexList, final double ponderation, final Map<Vertex, Double> ponderationMap) {
+        for (int index = 0; index < vertexList.size(); index++) {
+            final Vertex vertex = vertexList.get(index);
+            if (ponderationMap.containsKey(vertex)) {
+                ponderationMap.put(vertex, index * ponderation + ponderationMap.get(vertex));
+            } else {
+                ponderationMap.put(vertex, index * ponderation);
+            }
+        }
     }
 
     /**
