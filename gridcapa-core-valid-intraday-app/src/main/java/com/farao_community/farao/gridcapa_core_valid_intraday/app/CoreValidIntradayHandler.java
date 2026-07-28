@@ -14,6 +14,7 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRam
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.CnecRamMapper;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.FileImporter;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.PrefilterVertices;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.VerticesSelector;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import com.powsybl.glsk.api.GlskDocument;
@@ -38,11 +39,13 @@ public class CoreValidIntradayHandler {
     private static final String RTE_EI_CODE = "10YFR-RTE------C";
 
     private final FileImporter fileImporter;
+    private final PrefilterVertices prefilterVertices;
     private final VerticesSelector verticesSelector;
     private final CoreHubsConfiguration coreHubsConfiguration;
 
-    public CoreValidIntradayHandler(final FileImporter fileImporter, final VerticesSelector verticesSelector, final CoreHubsConfiguration coreHubsConfiguration) {
+    public CoreValidIntradayHandler(final FileImporter fileImporter, final PrefilterVertices prefilterVertices, final VerticesSelector verticesSelector, final CoreHubsConfiguration coreHubsConfiguration) {
         this.fileImporter = fileImporter;
+        this.prefilterVertices = prefilterVertices;
         this.verticesSelector = verticesSelector;
         this.coreHubsConfiguration = coreHubsConfiguration;
     }
@@ -64,7 +67,7 @@ public class CoreValidIntradayHandler {
                     .put(new EICode(RTE_EI_CODE),
                          fileImporter.importAggregatedScheduleFile(coreValidIntradayRequest.getOcappiMarketPoint(), targetProcessDateTime).doubleValue());
         }
-        //TODO select vertices
+        //select vertices
         final List<CnecRamBranchData> cnecRamBranchData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam);
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, cnecRamBranchData, coreHubsConfiguration.getCoreHubs());
         final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(projectedVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);

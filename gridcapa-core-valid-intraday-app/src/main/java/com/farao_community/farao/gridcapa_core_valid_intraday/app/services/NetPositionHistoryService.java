@@ -29,8 +29,6 @@ public class NetPositionHistoryService {
     }
 
     private Season getSeasonForTimestamp(final OffsetDateTime targetProcessDateTime) {
-
-
         return null;
     }
 
