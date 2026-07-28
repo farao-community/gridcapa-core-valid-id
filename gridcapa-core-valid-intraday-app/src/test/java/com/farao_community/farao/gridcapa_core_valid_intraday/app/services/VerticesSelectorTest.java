@@ -73,9 +73,9 @@ class VerticesSelectorTest {
     @Test
     void selectionSynthesis() {
         final List<Vertex> rankedVertices1 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
-                                                                        getOrderedVertice2(), 0.33,
-                                                                        getOrderedVertice3(), 0.34,
-                                                                        3);
+                                                                         getOrderedVertice2(), 0.33,
+                                                                         getOrderedVertice3(), 0.34,
+                                                                         3);
         assertThat(getIds(rankedVertices1))
                 .isNotEmpty()
                 .hasSize(3)
@@ -84,16 +84,16 @@ class VerticesSelectorTest {
         final List<Vertex> rankedVertices2 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
                                                                          getOrderedVertice2(), 0.33,
                                                                          getOrderedVertice3(), 0.34,
-                                                                        5);
+                                                                         5);
         assertThat(getIds(rankedVertices2))
                 .isNotEmpty()
                 .hasSize(5)
                 .containsExactly(2, 1, 4, 3, 5);
 
         final List<Vertex> rankedVertices3 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
-                                                                        getOrderedVertice1Reversed(), 0.33,
-                                                                        getOrderedVertice3Empty(), 0.34,
-                                                                        5);
+                                                                         getOrderedVertice1Reversed(), 0.33,
+                                                                         getOrderedVertice3Empty(), 0.34,
+                                                                         5);
         assertThat(getIds(rankedVertices3))
                 .isNotEmpty()
                 .hasSize(5)
@@ -132,9 +132,9 @@ class VerticesSelectorTest {
         @Override
         public List<CoreHub> getCoreHubs() {
             return List.of(
-                new CoreHub("Test1", "ram1", "fb1", "FR-CORE", "AA", false, false, 1, Country.FR),
-                new CoreHub("Test2", "ram2", "fb2", "DE-CORE", "BB", false, false, 1, Country.DE),
-                new CoreHub("Test3", "ram3", "fb3", "BE-CORE", "CC", false, false, 1, Country.BE)
+                    new CoreHub("Test1", "ram1", "fb1", "FR-CORE", "AA", false, false, 1, Country.FR),
+                    new CoreHub("Test2", "ram2", "fb2", "DE-CORE", "BB", false, false, 1, Country.DE),
+                    new CoreHub("Test3", "ram3", "fb3", "BE-CORE", "CC", false, false, 1, Country.BE)
             );
         }
     }
@@ -173,11 +173,11 @@ class VerticesSelectorTest {
 
     private List<Vertex> getOrderedVertice2() {
         return List.of(
-                       new Vertex(2, Map.of()),
-                       new Vertex(3, Map.of()),
-                       new Vertex(4, Map.of()),
-                       new Vertex(1, Map.of()),
-                       new Vertex(5, Map.of()));
+                new Vertex(2, Map.of()),
+                new Vertex(3, Map.of()),
+                new Vertex(4, Map.of()),
+                new Vertex(1, Map.of()),
+                new Vertex(5, Map.of()));
     }
 
     private List<CnecVertexRamData> getOrderedVertice3() {
