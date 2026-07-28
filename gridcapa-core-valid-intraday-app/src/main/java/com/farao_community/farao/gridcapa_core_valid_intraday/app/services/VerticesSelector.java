@@ -118,7 +118,7 @@ public class VerticesSelector {
      * @param anglePonderation          the ponderation to apply
      * @param constrainedSelection      the list of vertices returned from selectConstrainedVertices
      * @param constrainedPonderation    the ponderation to apply
-     * @param maxSelectedVertices                         the maximum number of selected vertices to return
+     * @param maxSelectedVertices       the maximum number of selected vertices to return
      * @return The ordered list of maxSelectedVertices vertices through ponderated selection
      */
     public List<Vertex> selectionSynthesis(final List<Vertex> closestSelection,

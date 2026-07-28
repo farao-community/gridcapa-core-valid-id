@@ -82,8 +82,8 @@ class VerticesSelectorTest {
                 .containsExactly(2, 1, 4);
 
         final List<Vertex> rankedVertices2 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
-                                    getOrderedVertice2(), 0.33,
-                                    getOrderedVertice3(), 0.34,
+                                                                         getOrderedVertice2(), 0.33,
+                                                                         getOrderedVertice3(), 0.34,
                                                                         5);
         assertThat(getIds(rankedVertices2))
                 .isNotEmpty()
