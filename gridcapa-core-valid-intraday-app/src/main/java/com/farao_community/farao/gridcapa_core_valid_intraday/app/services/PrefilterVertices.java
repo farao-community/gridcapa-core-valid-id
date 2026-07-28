@@ -11,7 +11,12 @@ import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsCo
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.CoreValidIntradayInvalidDataException;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.NetPositionHistory;
+import com.powsybl.iidm.network.Country;
+import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.Injection;
+import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Substation;
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.springframework.data.util.Pair;
@@ -23,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @Service
 public class PrefilterVertices {
@@ -41,13 +48,14 @@ public class PrefilterVertices {
             final ReferenceProgram marketPoints,
             final Network network,
             final List<Vertex> projectedVertices,
+            final double margin,
             final int maxSelectedVertices) {
         final List<Vertex> historicalFilteredVertices = historicPositionsFilter(targetProcessDateTime, marketPoints, projectedVertices);
-        if(isListSmallerThanMax(historicalFilteredVertices, maxSelectedVertices)) {
+        if (isListSmallerThanMax(historicalFilteredVertices, maxSelectedVertices)) {
             return projectedVertices;
         }
-        final List<Vertex> hubCapacityFilteredVertices = hubCapacityFilter(network, historicalFilteredVertices);
-        if(isListSmallerThanMax(hubCapacityFilteredVertices, maxSelectedVertices)) {
+        final List<Vertex> hubCapacityFilteredVertices = hubCapacityFilter(network, historicalFilteredVertices, margin);
+        if (isListSmallerThanMax(hubCapacityFilteredVertices, maxSelectedVertices)) {
             return projectedVertices;
         }
         return hubCapacityFilteredVertices;
@@ -63,12 +71,13 @@ public class PrefilterVertices {
                 .toList();
     }
 
-    private List<Vertex> hubCapacityFilter(final Network network, final List<Vertex> projectedVertices) {
-        Map<CoreHub, Pair<Double, Double>> generatorAndLoadByCoreHub = new HashMap<>();
-        coreHubs.stream()
-                .filter(coreHub -> !coreHub.isHvdcHub())
-                .f
-        return null;
+    private List<Vertex> hubCapacityFilter(final Network network,
+                                           final List<Vertex> projectedVertices,
+                                           final double margin) {
+        final Map<CoreHub, Pair<Double, Double>> generatorAndLoadByCoreHub = mapCoreHubsLoadAndGenerationToMinMax(network, margin);
+        return projectedVertices.stream()
+                .filter(vertex -> isVertexInCapacityBounds(vertex, generatorAndLoadByCoreHub))
+                .toList();
     }
 
     private boolean isVertexInNpBounds(final Vertex vertex,
@@ -76,10 +85,31 @@ public class PrefilterVertices {
         final Map<String, Integer> coordinates = vertex.coordinates();
         return nphByCoreHub.entrySet()
                 .stream()
-                .map(entry -> coordinates.get(entry.getKey().clusterVerticeCode()) <= entry.getValue().getMaximumNetPosition()
-                                    && coordinates.get(entry.getKey().clusterVerticeCode()) >= entry.getValue().getMinimumNetPosition())
+                .map(entry -> {
+                    final Integer vertexNetPosition = coordinates.get(entry.getKey().clusterVerticeCode());
+                    return vertexNetPosition >= entry.getValue().getMinimumNetPosition()
+                           && vertexNetPosition <= entry.getValue().getMaximumNetPosition();
+                })
                 .reduce((a, b) -> a && b)
-                .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("Coordinates missing for vertex id : {}", vertex.vertexId())));
+                .orElseThrow(getInvalidDataExceptionSupplier(vertex));
+    }
+
+    private boolean isVertexInCapacityBounds(final Vertex vertex,
+                                             final Map<CoreHub, Pair<Double, Double>> generatorAndLoadByCoreHub) {
+        final Map<String, Integer> coordinates = vertex.coordinates();
+        return generatorAndLoadByCoreHub.entrySet()
+                .stream()
+                .map(entry -> {
+                    final Integer vertexNetPosition = coordinates.get(entry.getKey().clusterVerticeCode());
+                    return vertexNetPosition >= entry.getValue().getFirst()
+                           && vertexNetPosition <= entry.getValue().getSecond();
+                })
+                .reduce((a, b) -> a && b)
+                .orElseThrow(getInvalidDataExceptionSupplier(vertex));
+    }
+
+    private static Supplier<CoreValidIntradayInvalidDataException> getInvalidDataExceptionSupplier(final Vertex vertex) {
+        return () -> new CoreValidIntradayInvalidDataException(String.format("Coordinates missing for vertex id : %s", vertex.vertexId()));
     }
 
     private Map<CoreHub, NetPositionHistory> getAndUpdateNetPositionHistory(final OffsetDateTime targetProcessDateTime,
@@ -99,40 +129,74 @@ public class PrefilterVertices {
                                                    final NetPositionHistory netPositionHistory,
                                                    final Set<NetPositionHistory> npHistoryToSave) {
         final double marketPos = marketPoints.getGlobalNetPosition(new EICode(coreHub.country()));
-        if(netPositionHistory.getMaximumNetPosition() < marketPos) {
+        if (netPositionHistory.getMaximumNetPosition() < marketPos) {
             netPositionHistory.setMaximumNetPosition(marketPos);
         }
-        if(netPositionHistory.getMinimumNetPosition() > marketPos) {
+        if (netPositionHistory.getMinimumNetPosition() > marketPos) {
             netPositionHistory.setMinimumNetPosition(marketPos);
         }
         npHistoryToSave.add(netPositionHistory);
     }
 
     private Map<CoreHub, NetPositionHistory> mapCoreHubsToNetPositionHistories(final Set<NetPositionHistory> npHistory) {
-        Map<CoreHub, NetPositionHistory> coreHubsNph = new HashMap<>();
+        final Map<CoreHub, NetPositionHistory> coreHubsNph = new HashMap<>();
         coreHubs.forEach(coreHub -> coreHubsNph.put(coreHub, npHistory.stream()
-                        .filter(nph -> nph.getHubRamcep2Code().equals(coreHub.ramcep2Code()))
-                        .findFirst()
-                        .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("CoreHub configuration for net position history missing for hub : {}", coreHub.name())))));
+                .filter(nph -> nph.getHubRamcep2Code().equals(coreHub.ramcep2Code()))
+                .findFirst()
+                .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("CoreHub configuration for net position history missing for hub : %s", coreHub.name())))));
         return coreHubsNph;
     }
 
-    private Map<CoreHub, Pair<Double, Double>>  mapCoreHubsToLoadAndGeneration(final Network network) {
-        Map<CoreHub, Pair<Double, Double>> gLByCoreHub = new HashMap<>();
+    private Map<CoreHub, Pair<Double, Double>> mapCoreHubsLoadAndGenerationToMinMax(final Network network,
+                                                                                    final double margin) {
+        final Map<CoreHub, Pair<Double, Double>> gLByCoreHub = new HashMap<>();
         coreHubs.stream()
                 .filter(coreHub -> !coreHub.isHvdcHub())
-                .forEach(coreHub -> gLByCoreHub.put(coreHub, Pair.of(network.)));
-
+                .forEach(coreHub -> {
+                    final Double sumGeneration = getGenerationForHub(network, coreHub);
+                    final Double sumLoads = getLoadForHub(network, coreHub);
+                    gLByCoreHub.put(coreHub, Pair.of(-sumLoads - margin, sumGeneration - sumLoads + margin));
+                });
         return gLByCoreHub;
 
     }
 
-    private Double getLoadForHub(final Network network, final CoreHub coreHub) {
-        network.getSubnetwork()
+    private Double getGenerationForHub(final Network network,
+                                       final CoreHub coreHub) {
+        return network.getGeneratorStream()
+                .filter(isInCountry(coreHub.country()).and(isConnected()))
+                .map(Generator::getMaxP)
+                .reduce(Double::sum)
+                .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("No load on network for hub : %s", coreHub.name())));
     }
 
-    private boolean isListSmallerThanMax(final List<Vertex> vertices, final int maxSelectedVertices) {
+    private Double getLoadForHub(final Network network,
+                                 final CoreHub coreHub) {
+        return network.getLoadStream()
+                .filter(isInCountry(coreHub.country()))
+                .map(Load::getP0)
+                .reduce(Double::sum)
+                .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("No load on network for hub : %s", coreHub.name())));
+    }
+
+    private boolean isListSmallerThanMax(final List<Vertex> vertices,
+                                         final int maxSelectedVertices) {
         return vertices == null || vertices.size() < maxSelectedVertices;
     }
 
+    public static Predicate<Injection<?>> isConnected() {
+        return generator -> generator.getTerminal().isConnected();
+    }
+
+    public static Predicate<Injection<?>> isInCountry(final Country country) {
+        return line -> getCountry(line) == country;
+    }
+
+    private static Country getCountry(final Injection<?> injection) {
+        return injection.getTerminal()
+                .getVoltageLevel()
+                .getSubstation()
+                .map(Substation::getNullableCountry)
+                .orElse(null);
+    }
 }
