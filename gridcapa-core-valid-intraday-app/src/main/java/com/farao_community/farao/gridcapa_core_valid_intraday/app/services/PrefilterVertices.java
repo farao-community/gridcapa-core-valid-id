@@ -127,7 +127,9 @@ public class PrefilterVertices {
 
     }
 
-    private Double
+    private Double getLoadForHub(final Network network, final CoreHub coreHub) {
+        network.getSubnetwork()
+    }
 
     private boolean isListSmallerThanMax(final List<Vertex> vertices, final int maxSelectedVertices) {
         return vertices == null || vertices.size() < maxSelectedVertices;
