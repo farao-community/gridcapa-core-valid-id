@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -34,8 +34,8 @@ import static java.util.Comparator.comparingDouble;
 public class VerticesSelector {
 
     private static final Comparator<CnecVertexRamData> ORDER_BY_RAM = Comparator.comparingInt(CnecVertexRamData::ram);
-    private static final Comparator<Map.Entry<Vertex, Double>> ORDER_MAP_ENTRY_INT = Comparator.comparingDouble(Map.Entry::getValue);
-    private static final Comparator<Map.Entry<Vertex, Double>> ORDER_BY_PONDERATION = ORDER_MAP_ENTRY_INT.thenComparingInt(e -> e.getKey().vertexId());
+    private static final Comparator<Map.Entry<Vertex, Double>> ORDER_MAP_ENTRY_DOUBLE = Comparator.comparingDouble(Map.Entry::getValue);
+    private static final Comparator<Map.Entry<Vertex, Double>> ORDER_BY_PONDERATION = ORDER_MAP_ENTRY_DOUBLE.thenComparingInt(e -> e.getKey().vertexId());
     private final List<CoreHub> coreHubs;
 
     public VerticesSelector(final CoreHubsConfiguration coreHubsConfiguration) {
@@ -47,8 +47,8 @@ public class VerticesSelector {
      * @param referenceProgram  contains the market positions
      * @return the vertices ordered by closest to the global market position
      */
-    public List<Vertex> selectClosestVertices(final List<Vertex> projectedVertices,
-                                              final ReferenceProgram referenceProgram) {
+    public List<Vertex> orderByClosestVertices(final List<Vertex> projectedVertices,
+                                               final ReferenceProgram referenceProgram) {
 
         return projectedVertices.stream()
             .map(v -> vertexAndMarketDistance(referenceProgram, v))
@@ -63,8 +63,8 @@ public class VerticesSelector {
      * @param referenceProgram  contains the market positions
      * @return vertices ordered by closest to the global market position by angle
      */
-    public List<Vertex> selectClosestVerticesByAngle(final List<Vertex> projectedVertices,
-                                              final ReferenceProgram referenceProgram) {
+    public List<Vertex> orderByClosestVerticesByAngle(final List<Vertex> projectedVertices,
+                                                      final ReferenceProgram referenceProgram) {
 
         return projectedVertices.stream()
                 .map(v -> vertexAndMarketAngleDistance(referenceProgram, v))
@@ -79,8 +79,8 @@ public class VerticesSelector {
      * @param cnecRamBranchDatas    all considered CNECs
      * @return the list of ordered constrained projectedVertices with the most constrained CNEC and its calculated constrained RAM
      */
-    public List<CnecVertexRamData> selectConstrainedVertices(final List<Vertex> projectedVertices,
-                                                             final List<CnecRamBranchData> cnecRamBranchDatas) {
+    public List<CnecVertexRamData> orderByConstrainedVertices(final List<Vertex> projectedVertices,
+                                                              final List<CnecRamBranchData> cnecRamBranchDatas) {
 
         final Map<String, String> flowBasedToVertexCodeMap = CoreHubUtils.getFlowBasedToVertexCodeMap(coreHubs);
         final List<CnecVertexRamData> constrainedOrderedVertices = new ArrayList<>();
@@ -118,8 +118,8 @@ public class VerticesSelector {
      * @param anglePonderation          the ponderation to apply
      * @param constrainedSelection      the list of vertices returned from selectConstrainedVertices
      * @param constrainedPonderation    the ponderation to apply
-     * @param n                         the maximum number of selected vertices to return
-     * @return The ordered list of n vertices through ponderated selection
+     * @param maxSelectedVertices                         the maximum number of selected vertices to return
+     * @return The ordered list of maxSelectedVertices vertices through ponderated selection
      */
     public List<Vertex> selectionSynthesis(final List<Vertex> closestSelection,
                                            final double closestPonderation,
@@ -127,7 +127,7 @@ public class VerticesSelector {
                                            final double anglePonderation,
                                            final List<CnecVertexRamData> constrainedSelection,
                                            final double constrainedPonderation,
-                                           final int n) {
+                                           final int maxSelectedVertices) {
 
         final Map<Vertex, Double> vertexIdToPonderation = new HashMap<>();
         fillVertexPonderationMap(closestSelection, closestPonderation, vertexIdToPonderation);
@@ -138,7 +138,7 @@ public class VerticesSelector {
         fillVertexPonderationMap(constrainedVertices, constrainedPonderation, vertexIdToPonderation);
         return vertexIdToPonderation.entrySet().stream()
                 .sorted(ORDER_BY_PONDERATION)
-                .limit(n)
+                .limit(maxSelectedVertices)
                 .map(Map.Entry::getKey)
                 .toList();
     }

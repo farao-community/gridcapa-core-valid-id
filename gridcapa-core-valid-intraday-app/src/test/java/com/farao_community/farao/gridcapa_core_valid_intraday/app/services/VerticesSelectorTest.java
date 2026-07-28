@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -28,18 +28,18 @@ class VerticesSelectorTest {
     private final VerticesSelector selector = new VerticesSelector(new TestCoreHubConf());
 
     @Test
-    void shouldSelectClosest() {
-        final List<Vertex> selectedVertices = selector.selectClosestVertices(getTestVertices(), getTestRefProg());
+    void shouldOrderByClosest() {
+        final List<Vertex> selectedVertices = selector.orderByClosestVertices(getTestVertices(), getTestRefProg());
 
         assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4, 3, 2);
     }
 
     @Test
-    void shouldSelectConstrained() {
+    void shouldOrderByConstrained() {
         final CnecRamBranchData cnec1 = new CnecRamBranchData("id1", 1450, 157, Map.of("fb1", BigDecimal.valueOf(.3345), "fb2", BigDecimal.valueOf(0.156), "fb3", BigDecimal.valueOf(.78)));
         final CnecRamBranchData cnec2 = new CnecRamBranchData("id2", 3450, 257, Map.of("fb1", BigDecimal.valueOf(.345), "fb2", BigDecimal.valueOf(0.256), "fb3", BigDecimal.valueOf(.78)));
 
-        final List<CnecVertexRamData> selectedVertices = selector.selectConstrainedVertices(getTestVertices2(), List.of(cnec1, cnec2));
+        final List<CnecVertexRamData> selectedVertices = selector.orderByConstrainedVertices(getTestVertices2(), List.of(cnec1, cnec2));
         assertThat(selectedVertices).hasSize(5);
         assertThat(selectedVertices.getFirst().ram()).isLessThanOrEqualTo(selectedVertices.getLast().ram());
         assertThat(selectedVertices.getFirst().ram()).isEqualTo(251);
@@ -47,14 +47,14 @@ class VerticesSelectorTest {
     }
 
     @Test
-    void shouldSelectClosestByAngle() {
-        final List<Vertex> selectedVertice = selector.selectClosestVerticesByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg());
+    void shouldOrderByClosestByAngle() {
+        final List<Vertex> selectedVertice = selector.orderByClosestVerticesByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg());
         assertThat(getIds(selectedVertice)).containsExactly(1);
 
-        final List<Vertex> selectedVertices = selector.selectClosestVerticesByAngle(getTestVertices(), getTestRefProg());
+        final List<Vertex> selectedVertices = selector.orderByClosestVerticesByAngle(getTestVertices(), getTestRefProg());
         assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4, 3, 2);
 
-        final List<Vertex> angleOnlySelection = selector.selectClosestVerticesByAngle(
+        final List<Vertex> angleOnlySelection = selector.orderByClosestVerticesByAngle(
                 List.of(new Vertex(6, Map.of("AA", -600, "BB", 1200, "CC", -600)),
                         new Vertex(7, Map.of("AA", -300, "BB", 600, "CC", 0))),
                 getTestRefProg());
@@ -72,21 +72,41 @@ class VerticesSelectorTest {
 
     @Test
     void selectionSynthesis() {
-        final List<Vertex> rankedVertices = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+        final List<Vertex> rankedVertices1 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+                                                                        getOrderedVertice2(), 0.33,
+                                                                        getOrderedVertice3(), 0.34,
+                                                                        3);
+        assertThat(getIds(rankedVertices1))
+                .isNotEmpty()
+                .hasSize(3)
+                .containsExactly(2, 1, 4);
+
+        final List<Vertex> rankedVertices2 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
                                     getOrderedVertice2(), 0.33,
                                     getOrderedVertice3(), 0.34,
                                                                         5);
-        assertThat(getIds(rankedVertices)).isNotEmpty()
+        assertThat(getIds(rankedVertices2))
+                .isNotEmpty()
                 .hasSize(5)
                 .containsExactly(2, 1, 4, 3, 5);
 
-        final List<Vertex> rankedVertices2 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+        final List<Vertex> rankedVertices3 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
                                                                         getOrderedVertice1Reversed(), 0.33,
                                                                         getOrderedVertice3Empty(), 0.34,
                                                                         5);
-        assertThat(getIds(rankedVertices2)).isNotEmpty()
+        assertThat(getIds(rankedVertices3))
+                .isNotEmpty()
                 .hasSize(5)
                 .containsExactly(1, 2, 3, 4, 5);
+
+        final List<Vertex> rankedVertices4 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
+                                                                         getOrderedVertice1Reversed(), 0.33,
+                                                                         getOrderedVertice3Empty(), 0.34,
+                                                                         2);
+        assertThat(getIds(rankedVertices4))
+                .isNotEmpty()
+                .hasSize(2)
+                .containsExactly(1, 2);
     }
 
     private static class TestRefProg extends ReferenceProgram {
