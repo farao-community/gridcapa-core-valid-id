@@ -5,7 +5,7 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreVal
 
 import java.util.List;
 
-final public class TestUtils {
+public final class TestUtils {
 
     private TestUtils() {
 

@@ -108,7 +108,7 @@ class IvaVolumesManagerTest {
     }
 
     private CoreValidIntradayTaskParameters createTaskParameters() {
-        CoreValidIntradayTaskParameters mock = Mockito.mock(CoreValidIntradayTaskParameters.class);
+        CoreValidIntradayTaskParameters mock = mock(CoreValidIntradayTaskParameters.class);
         when(mock.getFrmMarginPercentage()).thenReturn(5);
         when(mock.getMinRamMccc()).thenReturn(20);
         return mock;
