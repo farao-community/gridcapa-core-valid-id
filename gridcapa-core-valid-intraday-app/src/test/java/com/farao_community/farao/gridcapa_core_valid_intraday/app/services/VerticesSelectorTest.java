@@ -11,6 +11,8 @@ import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsCo
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRamBranchData;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecVertexRamData;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.utils.TestUtils;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceExchangeData;
@@ -36,14 +38,19 @@ class VerticesSelectorTest {
 
     @Test
     void shouldOrderByConstrained() {
-        final CnecRamBranchData cnec1 = new CnecRamBranchData("id1", 1450, 157, Map.of("fb1", BigDecimal.valueOf(.3345), "fb2", BigDecimal.valueOf(0.156), "fb3", BigDecimal.valueOf(.78)));
-        final CnecRamBranchData cnec2 = new CnecRamBranchData("id2", 3450, 257, Map.of("fb1", BigDecimal.valueOf(.345), "fb2", BigDecimal.valueOf(0.256), "fb3", BigDecimal.valueOf(.78)));
 
-        final List<CnecVertexRamData> selectedVertices = selector.orderByConstrainedVertices(getTestVertices2(), List.of(cnec1, cnec2));
+        final List<CnecVertexRamData> selectedVertices = selector.orderByConstrainedVertices(getTestVertices2(), getTestCnecRam());
         assertThat(selectedVertices).hasSize(5);
         assertThat(selectedVertices.getFirst().ram()).isLessThanOrEqualTo(selectedVertices.getLast().ram());
         assertThat(selectedVertices.getFirst().ram()).isEqualTo(251);
 
+    }
+
+    private static List<CnecRamBranchData> getTestCnecRam() {
+        final CnecRamBranchData cnec1 = new CnecRamBranchData("id1", 1450, 157, Map.of("fb1", BigDecimal.valueOf(.3345), "fb2", BigDecimal.valueOf(0.156), "fb3", BigDecimal.valueOf(.78)));
+        final CnecRamBranchData cnec2 = new CnecRamBranchData("id2", 3450, 257, Map.of("fb1", BigDecimal.valueOf(.345), "fb2", BigDecimal.valueOf(0.256), "fb3", BigDecimal.valueOf(.78)));
+
+        return List.of(cnec1, cnec2);
     }
 
     @Test
@@ -72,41 +79,20 @@ class VerticesSelectorTest {
 
     @Test
     void selectionSynthesis() {
-        final List<Vertex> rankedVertices1 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
-                                                                         getOrderedVertice2(), 0.33,
-                                                                         getOrderedVertice3(), 0.34,
-                                                                         3);
+        final CoreValidIntradayTaskParameters coreValidIntradayTaskParameters = TestUtils.getTestCoreValidIntradayTaskParameters();
+
+        final List<Vertex> rankedVertices1 = selector.selectionSynthesis(getTestVertices(), getTestRefProg(), getTestCnecRam(), coreValidIntradayTaskParameters);
+
         assertThat(getIds(rankedVertices1))
                 .isNotEmpty()
-                .hasSize(3)
-                .containsExactly(2, 1, 4);
+                .hasSize(5)
+                .containsExactly(1, 5, 4, 3, 2);
+        final List<Vertex> rankedVertices2 = selector.selectionSynthesis(getTestVertices(), getTestRefProg(), getTestCnecRam(), TestUtils.getTestCoreValidIntradayTaskParametersMaxSelect2());
 
-        final List<Vertex> rankedVertices2 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
-                                                                         getOrderedVertice2(), 0.33,
-                                                                         getOrderedVertice3(), 0.34,
-                                                                         5);
         assertThat(getIds(rankedVertices2))
                 .isNotEmpty()
-                .hasSize(5)
-                .containsExactly(2, 1, 4, 3, 5);
-
-        final List<Vertex> rankedVertices3 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
-                                                                         getOrderedVertice1Reversed(), 0.33,
-                                                                         getOrderedVertice3Empty(), 0.34,
-                                                                         5);
-        assertThat(getIds(rankedVertices3))
-                .isNotEmpty()
-                .hasSize(5)
-                .containsExactly(1, 2, 3, 4, 5);
-
-        final List<Vertex> rankedVertices4 = selector.selectionSynthesis(getOrderedVertice1(), 0.33,
-                                                                         getOrderedVertice1Reversed(), 0.33,
-                                                                         getOrderedVertice3Empty(), 0.34,
-                                                                         2);
-        assertThat(getIds(rankedVertices4))
-                .isNotEmpty()
                 .hasSize(2)
-                .containsExactly(1, 2);
+                .containsExactly(1, 5);
     }
 
     private static class TestRefProg extends ReferenceProgram {
@@ -153,47 +139,5 @@ class VerticesSelectorTest {
                        new Vertex(3, Map.of("AA", 200, "BB", 100, "CC", 50)),
                        new Vertex(4, Map.of("AA", -350, "BB", 600, "CC", 300)),
                        new Vertex(5, Map.of("AA", -299, "BB", 600, "CC", 300)));
-    }
-
-    private List<Vertex> getOrderedVertice1() {
-        return List.of(new Vertex(1, Map.of()),
-                       new Vertex(2, Map.of()),
-                       new Vertex(3, Map.of()),
-                       new Vertex(4, Map.of()),
-                       new Vertex(5, Map.of()));
-    }
-
-    private List<Vertex> getOrderedVertice1Reversed() {
-        return List.of(new Vertex(5, Map.of()),
-                       new Vertex(4, Map.of()),
-                       new Vertex(3, Map.of()),
-                       new Vertex(2, Map.of()),
-                       new Vertex(1, Map.of()));
-    }
-
-    private List<Vertex> getOrderedVertice2() {
-        return List.of(
-                new Vertex(2, Map.of()),
-                new Vertex(3, Map.of()),
-                new Vertex(4, Map.of()),
-                new Vertex(1, Map.of()),
-                new Vertex(5, Map.of()));
-    }
-
-    private List<CnecVertexRamData> getOrderedVertice3() {
-        return List.of(
-                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(2, Map.of()), 0),
-                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(4, Map.of()), 0),
-                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(1, Map.of()), 0),
-                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(3, Map.of()), 0),
-                new CnecVertexRamData(getEmptyCnecRamData(), new Vertex(5, Map.of()), 0));
-    }
-
-    private List<CnecVertexRamData> getOrderedVertice3Empty() {
-        return List.of();
-    }
-
-    private CnecRamBranchData getEmptyCnecRamData() {
-        return new CnecRamBranchData("BRANCH_ID", 0, 0, Map.of());
     }
 }

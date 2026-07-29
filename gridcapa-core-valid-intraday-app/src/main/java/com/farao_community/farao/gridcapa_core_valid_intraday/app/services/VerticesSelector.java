@@ -14,6 +14,7 @@ import com.farao_community.farao.gridcapa_core_valid_commons.vertex.VerticesUtil
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.CoreValidIntradayInvalidDataException;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRamBranchData;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecVertexRamData;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.apache.commons.lang3.tuple.Pair;
@@ -112,35 +113,41 @@ public class VerticesSelector {
 
     /**
      *
-     * @param closestSelection          the list of vertices returned from selectClosestVertices
-     * @param closestPonderation        the ponderation to apply
-     * @param angleSelection            the list of vertices returned from selectClosestVerticesByAngle
-     * @param anglePonderation          the ponderation to apply
-     * @param constrainedSelection      the list of vertices returned from selectConstrainedVertices
-     * @param constrainedPonderation    the ponderation to apply
-     * @param maxSelectedVertices       the maximum number of selected vertices to return
+     * @param projectedVertices                  the list of projected vertices
+     * @param marketPoints                       the market points
+     * @param cnecRamBranchData                  the cnec ram branches
+     * @param coreValidIntradayTaskParameters    the application parameters
      * @return The ordered list of maxSelectedVertices vertices through ponderated selection
      */
-    public List<Vertex> selectionSynthesis(final List<Vertex> closestSelection,
-                                           final double closestPonderation,
-                                           final List<Vertex> angleSelection,
-                                           final double anglePonderation,
-                                           final List<CnecVertexRamData> constrainedSelection,
-                                           final double constrainedPonderation,
-                                           final int maxSelectedVertices) {
+    public List<Vertex> selectionSynthesis(List<Vertex> projectedVertices,
+                                           ReferenceProgram marketPoints,
+                                           List<CnecRamBranchData> cnecRamBranchData,
+                                           CoreValidIntradayTaskParameters coreValidIntradayTaskParameters) {
+
+        final List<Vertex> closestSelection = orderByClosestVertices(projectedVertices, marketPoints);
+        final List<Vertex> angleSelection = orderByClosestVerticesByAngle(projectedVertices, marketPoints);
+        final List<CnecVertexRamData> constrainedSelection = orderByConstrainedVertices(projectedVertices, cnecRamBranchData);
 
         final Map<Vertex, Double> vertexIdToPonderation = new HashMap<>();
-        fillVertexPonderationMap(closestSelection, closestPonderation, vertexIdToPonderation);
-        fillVertexPonderationMap(angleSelection, anglePonderation, vertexIdToPonderation);
+        final int ponderationClosest = coreValidIntradayTaskParameters.getPonderationClosest();
+        fillVertexPonderationMap(closestSelection, ponderationToQuotient(ponderationClosest), vertexIdToPonderation);
+        final int ponderationAngle = coreValidIntradayTaskParameters.getPonderationAngle();
+        fillVertexPonderationMap(angleSelection, ponderationToQuotient(ponderationAngle), vertexIdToPonderation);
         final List<Vertex> constrainedVertices = constrainedSelection.stream()
                 .map(CnecVertexRamData::vertex)
                 .toList();
-        fillVertexPonderationMap(constrainedVertices, constrainedPonderation, vertexIdToPonderation);
+        final int ponderationConstrained = coreValidIntradayTaskParameters.getPonderationConstrained();
+        fillVertexPonderationMap(constrainedVertices, ponderationToQuotient(ponderationConstrained), vertexIdToPonderation);
         return vertexIdToPonderation.entrySet().stream()
                 .sorted(ORDER_BY_PONDERATION)
-                .limit(maxSelectedVertices)
+                .limit(coreValidIntradayTaskParameters.getMaxSelectedVertices())
                 .map(Map.Entry::getKey)
                 .toList();
+    }
+
+    private double ponderationToQuotient(final int ponderation) {
+        final double pond = ponderation;
+        return pond / 100.0;
     }
 
     private void fillVertexPonderationMap(final List<Vertex> vertexList, final double ponderation, final Map<Vertex, Double> ponderationMap) {
