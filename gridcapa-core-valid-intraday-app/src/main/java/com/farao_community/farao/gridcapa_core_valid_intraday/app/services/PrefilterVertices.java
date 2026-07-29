@@ -184,11 +184,11 @@ public class PrefilterVertices {
         return vertices == null || vertices.size() < maxSelectedVertices;
     }
 
-    public static Predicate<Injection<?>> isConnected() {
+    private static Predicate<Injection<?>> isConnected() {
         return generator -> generator.getTerminal().isConnected();
     }
 
-    public static Predicate<Injection<?>> isInCountry(final Country country) {
+    private static Predicate<Injection<?>> isInCountry(final Country country) {
         return line -> getCountry(line) == country;
     }
 
