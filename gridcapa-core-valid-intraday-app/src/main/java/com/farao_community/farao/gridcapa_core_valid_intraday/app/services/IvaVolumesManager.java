@@ -57,8 +57,8 @@ public class IvaVolumesManager {
                                                      final CoreValidIntradayTaskParameters params) {
         final Map<String, BigDecimal> idToIva = new HashMap<>();
         final BigDecimal margin = BigDecimal.valueOf(riskMarginInMW);
-        final BigDecimal frmMargin = toPercentage(params.getFrmMarginPercentage());
-        final BigDecimal minRamMccc = toPercentage(params.getMinRamMccc());
+        final BigDecimal frmMargin = toProportion(params.getFrmMarginPercentage());
+        final BigDecimal minRamMccc = toProportion(params.getMinRamMccc());
 
         for (final CriticalBranchType branch : this.criticalBranches) {
             final BigDecimal frm = getFrm(branch, frmMargin);
@@ -148,7 +148,7 @@ public class IvaVolumesManager {
         return frmMarginValue.multiply(BigDecimal.valueOf(criticalBranch.getFMax()));
     }
 
-    private BigDecimal toPercentage(final int value) {
+    private BigDecimal toProportion(final int value) {
         return BigDecimal.valueOf(value).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN);
     }
 }

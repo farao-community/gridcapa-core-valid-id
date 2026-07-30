@@ -58,7 +58,7 @@ public class CoreValidIntradayRequest {
                                     final @JsonProperty("marketPoint") CoreValidIntradayFileResource marketPoint,
                                     final @JsonProperty("ocappiMarketPoint") CoreValidIntradayFileResource ocappiMarketPoint,
                                     final @JsonProperty("pra") CoreValidIntradayFileResource pra,
-                                    @JsonProperty("taskParameterList") List<TaskParameterDto> taskParameterList,
+                                    final @JsonProperty("taskParameterList") List<TaskParameterDto> taskParameterList,
                                     final @JsonProperty("launchedAutomatically") boolean launchedAutomatically) {
         this.id = id;
         this.currentRunId = currentRunId;

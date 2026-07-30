@@ -31,7 +31,7 @@ class VerticesSelectorTest {
 
     @Test
     void shouldOrderByClosest() {
-        final List<Vertex> selectedVertices = selector.orderByClosestVertices(getTestVertices(), getTestRefProg());
+        final List<Vertex> selectedVertices = selector.orderByDistance(getTestVertices(), getTestRefProg());
 
         assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4, 3, 2);
     }
@@ -39,7 +39,7 @@ class VerticesSelectorTest {
     @Test
     void shouldOrderByConstrained() {
 
-        final List<CnecVertexRamData> selectedVertices = selector.orderByConstrainedVertices(getTestVertices2(), getTestCnecRam());
+        final List<CnecVertexRamData> selectedVertices = selector.orderByConstrainedValue(getTestVertices2(), getTestCnecRam());
         assertThat(selectedVertices).hasSize(5);
         assertThat(selectedVertices.getFirst().ram()).isLessThanOrEqualTo(selectedVertices.getLast().ram());
         assertThat(selectedVertices.getFirst().ram()).isEqualTo(251);
@@ -55,13 +55,13 @@ class VerticesSelectorTest {
 
     @Test
     void shouldOrderByClosestByAngle() {
-        final List<Vertex> selectedVertice = selector.orderByClosestVerticesByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg());
+        final List<Vertex> selectedVertice = selector.orderByAngle(List.of(new Vertex(1, Map.of("AA", -301, "BB", 600, "CC", -300))), getTestRefProg());
         assertThat(getIds(selectedVertice)).containsExactly(1);
 
-        final List<Vertex> selectedVertices = selector.orderByClosestVerticesByAngle(getTestVertices(), getTestRefProg());
+        final List<Vertex> selectedVertices = selector.orderByAngle(getTestVertices(), getTestRefProg());
         assertThat(getIds(selectedVertices)).containsExactly(1, 5, 4, 3, 2);
 
-        final List<Vertex> angleOnlySelection = selector.orderByClosestVerticesByAngle(
+        final List<Vertex> angleOnlySelection = selector.orderByAngle(
                 List.of(new Vertex(6, Map.of("AA", -600, "BB", 1200, "CC", -600)),
                         new Vertex(7, Map.of("AA", -300, "BB", 600, "CC", 0))),
                 getTestRefProg());

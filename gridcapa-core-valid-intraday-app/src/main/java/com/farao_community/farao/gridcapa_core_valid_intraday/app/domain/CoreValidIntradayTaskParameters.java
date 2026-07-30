@@ -57,7 +57,7 @@ public class CoreValidIntradayTaskParameters {
             try {
                 return Integer.parseInt(value);
             } catch (NumberFormatException e) {
-                errors.add(String.format("Parameter %s could not be parsed as integer (value: %s)", parameter.getId(), parameter.getValue()));
+                errors.add(String.format("Parameter %s could not be parsed as integer (value: %s)", parameter.getId(), value));
             }
         } else {
             errors.add(String.format("Parameter %s was expected to be of type INT, got %s", parameter.getId(), parameter.getParameterType()));
