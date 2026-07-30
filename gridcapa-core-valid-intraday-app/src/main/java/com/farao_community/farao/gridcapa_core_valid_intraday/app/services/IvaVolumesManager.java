@@ -7,6 +7,7 @@
 package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.ConstResultType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.CriticalBranchType;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
@@ -27,7 +28,6 @@ import static java.math.BigDecimal.ZERO;
 public class IvaVolumesManager {
     private static final String FR = "FR";
     private static final String FRENCH_TSO_EIC = "10YFR-RTE------C";
-    private static final double FRM_MARGIN_PERCENTAGE = 0.05;
 
     private final List<Vertex> vertices;
     private final BigDecimal frenchMarketGlobalNetPosition;
@@ -44,27 +44,31 @@ public class IvaVolumesManager {
         this.ptdfsZsByBranch = ptdfsZsByBranch;
 
         this.criticalBranches = fbDomainDoc
-            .getFlowBasedDomainTimeSeries()
-            .stream()
-            .flatMap(ts -> ts.getPeriod().stream())
-            .flatMap(pt -> pt.getInterval().stream())
-            .flatMap(IvaVolumesManager::getCriticalBranchesFromInterval)
-            .toList();
+                .getFlowBasedDomainTimeSeries()
+                .stream()
+                .flatMap(ts -> ts.getPeriod().stream())
+                .flatMap(pt -> pt.getInterval().stream())
+                .flatMap(IvaVolumesManager::getCriticalBranchesFromInterval)
+                .toList();
     }
 
-    public Map<String, BigDecimal> computeIvaVolumes(final double riskMarginInMW, final RaoService raoService, final BigDecimal minRamMccc) {
+    public Map<String, BigDecimal> computeIvaVolumes(final double riskMarginInMW,
+                                                     final RaoService raoService,
+                                                     final CoreValidIntradayTaskParameters params) {
         final Map<String, BigDecimal> idToIva = new HashMap<>();
         final BigDecimal margin = BigDecimal.valueOf(riskMarginInMW);
+        final BigDecimal frmMargin = toProportion(params.getFrmMarginPercentage());
+        final BigDecimal minRamMccc = toProportion(params.getMinRamMccc());
 
         for (final CriticalBranchType branch : this.criticalBranches) {
-            final BigDecimal frm = getFrm(branch);
-            final BigDecimal frmWithRisk =  frm.add(margin);
+            final BigDecimal frm = getFrm(branch, frmMargin);
+            final BigDecimal frmWithRisk = frm.add(margin);
 
             final BigDecimal iva = this.vertices.stream()
-                .filter(v -> getMarginFromMarket(branch, v).compareTo(frmWithRisk) >= 0) // margin > FRM
-                .map(v -> raoService.computeIvaVolume(branch, v))
-                .max(BigDecimal::compareTo)
-                .orElse(ZERO);
+                    .filter(v -> getMarginFromMarket(branch, v).compareTo(frmWithRisk) >= 0) // margin > FRM
+                    .map(v -> raoService.computeIvaVolume(branch, v))
+                    .max(BigDecimal::compareTo)
+                    .orElse(ZERO);
 
             final BigDecimal branchIvaMax = getBranchIvaMax(branch, frm, minRamMccc);
             idToIva.put(branch.getId(), iva.min(branchIvaMax));
@@ -73,23 +77,25 @@ public class IvaVolumesManager {
         return idToIva;
     }
 
-    private BigDecimal getBranchIvaMax(final CriticalBranchType branch, final BigDecimal frm, final BigDecimal minRamMccc) {
+    private BigDecimal getBranchIvaMax(final CriticalBranchType branch,
+                                       final BigDecimal frm,
+                                       final BigDecimal minRamMccc) {
         return BigDecimal.valueOf(branch.getFMax())
-                         .multiply(BigDecimal.ONE.subtract(minRamMccc))
-                         .subtract(frm)
-                         .subtract(BigDecimal.valueOf(branch.getF0Core()))
-                         //AMR and CVA are still not available in file, when they will be, uncomment
-                         //.add(BigDecimal.valueOf(branch.getAmr()))
-                         //.add(BigDecimal.valueOf(branch.getCva()))
-                         .setScale(0, RoundingMode.HALF_EVEN)
-                         .max(ZERO);
+                .multiply(BigDecimal.ONE.subtract(minRamMccc))
+                .subtract(frm)
+                .subtract(BigDecimal.valueOf(branch.getF0Core()))
+                //AMR and CVA are still not available in file, when they will be, uncomment
+                //.add(BigDecimal.valueOf(branch.getAmr()))
+                //.add(BigDecimal.valueOf(branch.getCva()))
+                .setScale(0, RoundingMode.HALF_EVEN)
+                .max(ZERO);
     }
 
     private static Stream<CriticalBranchType> getCriticalBranchesFromInterval(final IntervalType interval) {
         return interval.getFlowBasedDomain().stream()
-            .flatMap(IvaVolumesManager::getConstraintResultStream)
-            .map(ConstResultType::getCriticalBranch)
-            .filter(IvaVolumesManager::isFrenchOrigin);
+                .flatMap(IvaVolumesManager::getConstraintResultStream)
+                .map(ConstResultType::getCriticalBranch)
+                .filter(IvaVolumesManager::isFrenchOrigin);
     }
 
     private static Stream<ConstResultType> getConstraintResultStream(final FlowBasedDomainType domain) {
@@ -115,7 +121,7 @@ public class IvaVolumesManager {
     private BigDecimal getFlowGap(final CriticalBranchType criticalBranch,
                                   final BigDecimal vertexNP) {
         return ptdfsZsByBranch.getOrDefault(criticalBranch.getId(), ZERO)
-            .multiply(vertexNP.subtract(frenchMarketGlobalNetPosition));
+                .multiply(vertexNP.subtract(frenchMarketGlobalNetPosition));
     }
 
     /**
@@ -132,14 +138,17 @@ public class IvaVolumesManager {
                                                          - criticalBranch.getFrmMw());
 
         final BigDecimal frenchPosVertex = BigDecimal.valueOf(Optional.ofNullable(vertex.coordinates().get(FR))
-                                                                  .orElseThrow());
+                                                                      .orElseThrow());
 
         return ramRefProg.subtract(getFlowGap(criticalBranch, frenchPosVertex));
     }
 
-    private static BigDecimal getFrm(final CriticalBranchType criticalBranch) {
-        return BigDecimal.valueOf(FRM_MARGIN_PERCENTAGE)
-            .multiply(BigDecimal.valueOf(criticalBranch.getFMax()));
+    private static BigDecimal getFrm(final CriticalBranchType criticalBranch,
+                                     final BigDecimal frmMarginValue) {
+        return frmMarginValue.multiply(BigDecimal.valueOf(criticalBranch.getFMax()));
     }
 
+    private BigDecimal toProportion(final int value) {
+        return BigDecimal.valueOf(value).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN);
+    }
 }

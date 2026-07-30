@@ -8,6 +8,7 @@
 
 package com.farao_community.farao.gridcapa_core_valid_intraday.api.resource;
 
+import com.farao_community.farao.gridcapa.task_manager.api.TaskParameterDto;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.OffsetDateTimeDeserializer;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.OffsetDateTimeSerializer;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -20,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 /**
  * @author Marc Schwitzguebel {@literal <marc.schwitzguebel_externe at rte-france.com>}
@@ -41,6 +43,7 @@ public class CoreValidIntradayRequest {
     private final CoreValidIntradayFileResource marketPoint;
     private final CoreValidIntradayFileResource ocappiMarketPoint;
     private final CoreValidIntradayFileResource pra;
+    private final List<TaskParameterDto> taskParameterList;
     private final boolean launchedAutomatically;
 
     @JsonCreator
@@ -55,6 +58,7 @@ public class CoreValidIntradayRequest {
                                     final @JsonProperty("marketPoint") CoreValidIntradayFileResource marketPoint,
                                     final @JsonProperty("ocappiMarketPoint") CoreValidIntradayFileResource ocappiMarketPoint,
                                     final @JsonProperty("pra") CoreValidIntradayFileResource pra,
+                                    final @JsonProperty("taskParameterList") List<TaskParameterDto> taskParameterList,
                                     final @JsonProperty("launchedAutomatically") boolean launchedAutomatically) {
         this.id = id;
         this.currentRunId = currentRunId;
@@ -67,6 +71,7 @@ public class CoreValidIntradayRequest {
         this.marketPoint = marketPoint;
         this.ocappiMarketPoint = ocappiMarketPoint;
         this.pra = pra;
+        this.taskParameterList = taskParameterList;
         this.launchedAutomatically = launchedAutomatically;
     }
 
@@ -80,8 +85,9 @@ public class CoreValidIntradayRequest {
                                     final CoreValidIntradayFileResource mergedCnec,
                                     final CoreValidIntradayFileResource marketPoint,
                                     final CoreValidIntradayFileResource ocappiMarketPoint,
-                                    final CoreValidIntradayFileResource pra) {
-        this(id, currentRunId, timestamp, cnecRam, vertices, cgm, glsk, mergedCnec, marketPoint, ocappiMarketPoint, pra, false);
+                                    final CoreValidIntradayFileResource pra,
+                                    final List<TaskParameterDto> taskParameterList) {
+        this(id, currentRunId, timestamp, cnecRam, vertices, cgm, glsk, mergedCnec, marketPoint, ocappiMarketPoint, pra, taskParameterList, false);
     }
 
     public String getId() {
@@ -130,6 +136,10 @@ public class CoreValidIntradayRequest {
 
     public boolean getLaunchedAutomatically() {
         return launchedAutomatically;
+    }
+
+    public List<TaskParameterDto> getTaskParameterList() {
+        return taskParameterList;
     }
 
     @Override

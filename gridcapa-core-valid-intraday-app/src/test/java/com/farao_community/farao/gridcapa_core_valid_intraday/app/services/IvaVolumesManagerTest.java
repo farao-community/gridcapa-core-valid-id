@@ -8,6 +8,7 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayFileResource;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,11 +29,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class IvaVolumesManagerTest {
 
-    private static final BigDecimal MIN_RAM_MCCC_PERCENT = BigDecimal.valueOf(0.20);
     @Autowired
     private FileImporter fileImporter;
     private static final OffsetDateTime TEST_DATE_TIME = OffsetDateTime.parse("2021-07-22T22:30Z");
@@ -60,9 +61,9 @@ class IvaVolumesManagerTest {
                                                             Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(0.1)),
                                                             flowBasedDomainDocument);
         final RaoService rao = mock();
-        assertThat(mgr.computeIvaVolumes(100, rao, MIN_RAM_MCCC_PERCENT))
-            .isNotEmpty()
-            .containsValue(ZERO);
+        assertThat(mgr.computeIvaVolumes(100, rao, createTaskParameters()))
+                .isNotEmpty()
+                .containsValue(ZERO);
 
         verify(rao, never()).computeIvaVolume(any(), any());
     }
@@ -75,11 +76,11 @@ class IvaVolumesManagerTest {
                                                             flowBasedDomainDocument);
         final RaoService rao = mock();
         Mockito.when(rao.computeIvaVolume(any(), any()))
-            .thenReturn(TEN);
+                .thenReturn(TEN);
 
-        assertThat(mgr.computeIvaVolumes(100, rao, MIN_RAM_MCCC_PERCENT))
-            .isNotEmpty()
-            .doesNotContainValue(ZERO);
+        assertThat(mgr.computeIvaVolumes(100, rao, createTaskParameters()))
+                .isNotEmpty()
+                .doesNotContainValue(ZERO);
 
         verify(rao).computeIvaVolume(any(), any());
     }
@@ -95,7 +96,7 @@ class IvaVolumesManagerTest {
         Mockito.when(rao.computeIvaVolume(any(), any()))
                 .thenReturn(eighty);
 
-        assertThat(mgr.computeIvaVolumes(100, rao, MIN_RAM_MCCC_PERCENT))
+        assertThat(mgr.computeIvaVolumes(100, rao, createTaskParameters()))
                 .isNotEmpty()
                 .containsValue(BigDecimal.valueOf(65)) // value of maxIva is taken
                 .doesNotContainValue(eighty);
@@ -106,4 +107,10 @@ class IvaVolumesManagerTest {
         return new Vertex(1, Map.of("FR", frValue, "BE", -1000, "AT", 500));
     }
 
+    private CoreValidIntradayTaskParameters createTaskParameters() {
+        CoreValidIntradayTaskParameters mock = mock(CoreValidIntradayTaskParameters.class);
+        when(mock.getFrmMarginPercentage()).thenReturn(5);
+        when(mock.getMinRamMccc()).thenReturn(20);
+        return mock;
+    }
 }

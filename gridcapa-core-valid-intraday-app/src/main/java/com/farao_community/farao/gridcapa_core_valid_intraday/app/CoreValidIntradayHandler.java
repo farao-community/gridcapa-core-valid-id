@@ -11,6 +11,7 @@ import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.VerticesUtils;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayRequest;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRamBranchData;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.CnecRamMapper;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.FileImporter;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.VerticesSelector;
@@ -34,8 +35,6 @@ import java.util.List;
 public class CoreValidIntradayHandler {
 
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd' 'HH:mm");
-    //TODO replace with parameters
-    private static final int MAX_SELECTED_VERTICES = 6;
     private static final String RTE_EI_CODE = "10YFR-RTE------C";
 
     private final FileImporter fileImporter;
@@ -50,6 +49,7 @@ public class CoreValidIntradayHandler {
 
     public String handleCoreValidIntradayRequest(final CoreValidIntradayRequest coreValidIntradayRequest) {
         setUpEventLogging(coreValidIntradayRequest);
+        final CoreValidIntradayTaskParameters coreValidIntradayTaskParameters = new CoreValidIntradayTaskParameters(coreValidIntradayRequest.getTaskParameterList());
         final OffsetDateTime targetProcessDateTime = coreValidIntradayRequest.getTimestamp();
         final String formattedTimestamp = TIMESTAMP_FORMATTER.format(targetProcessDateTime);
         //TODO import stuff
@@ -67,12 +67,9 @@ public class CoreValidIntradayHandler {
         //TODO select vertices
         final List<CnecRamBranchData> cnecRamBranchData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam);
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, cnecRamBranchData, coreHubsConfiguration.getCoreHubs());
-        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(
-                verticesSelector.orderByClosestVertices(projectedVertices, marketPoints), 0.33,
-                verticesSelector.orderByClosestVerticesByAngle(projectedVertices, marketPoints), 0.33,
-                verticesSelector.orderByConstrainedVertices(projectedVertices, cnecRamBranchData), 0.34,
-                MAX_SELECTED_VERTICES);
+        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(projectedVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);
         //TODO calculate IVA stuff
+
         //TODO output IVAs
         return coreValidIntradayRequest.getId();
     }
