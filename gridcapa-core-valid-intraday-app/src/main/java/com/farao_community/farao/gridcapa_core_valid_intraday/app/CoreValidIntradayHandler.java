@@ -80,7 +80,7 @@ public class CoreValidIntradayHandler {
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, cnecRamBranchData, coreHubsConfiguration.getCoreHubs());
         final List<Vertex> prefilteredVertices = prefilterVertices.prefilterVertices(targetProcessDateTime, marketPoints, network, projectedVertices, coreValidIntradayTaskParameters);
         businessLogger.info(String.format("Prefiltered Vertices are : %s", logVerticeIds(prefilteredVertices)));
-        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(projectedVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);
+        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(prefilteredVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);
         businessLogger.info(String.format("Selected Vertices are : %s", logVerticeIds(ponderatedSelection)));
         //TODO calculate IVA stuff
 
