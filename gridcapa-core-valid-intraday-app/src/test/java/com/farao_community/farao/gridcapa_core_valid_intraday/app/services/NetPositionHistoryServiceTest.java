@@ -10,6 +10,7 @@ import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHub;
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsConfiguration;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.NetPositionHistory;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.Season;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.repositories.NetPositionHistoryRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +33,13 @@ class NetPositionHistoryServiceTest {
     @Autowired
     private CoreHubsConfiguration coreHubsConfiguration;
 
+    @Autowired
+    private NetPositionHistoryRepository netPositionHistoryRepository;
+
     @Test
     void getNpHistoryForTimestamp() {
+        netPositionHistoryRepository.deleteAll();
+
         final List<CoreHub> coreHubs = coreHubsConfiguration.getCoreHubs();
         final Set<NetPositionHistory> nphsSpring = createNphsFromSeason(Season.SPRING, coreHubs);
         final Set<NetPositionHistory> nphsSummer = createNphsFromSeason(Season.SUMMER, coreHubs);

@@ -22,6 +22,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.crac.io.fbconstraint.FbConstraintCreationContext;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
+import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
@@ -42,16 +43,19 @@ public class CoreValidIntradayHandler {
     private final PrefilterVertices prefilterVertices;
     private final VerticesSelector verticesSelector;
     private final CoreHubsConfiguration coreHubsConfiguration;
+    private final Logger businessLogger;
 
-    public CoreValidIntradayHandler(final FileImporter fileImporter, final PrefilterVertices prefilterVertices, final VerticesSelector verticesSelector, final CoreHubsConfiguration coreHubsConfiguration) {
+    public CoreValidIntradayHandler(final FileImporter fileImporter, final Logger businessLogger, final PrefilterVertices prefilterVertices, final VerticesSelector verticesSelector, final CoreHubsConfiguration coreHubsConfiguration) {
         this.fileImporter = fileImporter;
         this.prefilterVertices = prefilterVertices;
         this.verticesSelector = verticesSelector;
         this.coreHubsConfiguration = coreHubsConfiguration;
+        this.businessLogger = businessLogger;
     }
 
     public String handleCoreValidIntradayRequest(final CoreValidIntradayRequest coreValidIntradayRequest) {
         setUpEventLogging(coreValidIntradayRequest);
+        businessLogger.info(String.format("Starting computation of request id: %s",coreValidIntradayRequest.getId()));
         final CoreValidIntradayTaskParameters coreValidIntradayTaskParameters = new CoreValidIntradayTaskParameters(coreValidIntradayRequest.getTaskParameterList());
         final OffsetDateTime targetProcessDateTime = coreValidIntradayRequest.getTimestamp();
         final String formattedTimestamp = TIMESTAMP_FORMATTER.format(targetProcessDateTime);
@@ -70,6 +74,14 @@ public class CoreValidIntradayHandler {
         //select vertices
         final List<CnecRamBranchData> cnecRamBranchData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam);
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, cnecRamBranchData, coreHubsConfiguration.getCoreHubs());
+        final List<Vertex> prefilteredVertices = prefilterVertices.prefilterVertices(targetProcessDateTime, marketPoints, network, projectedVertices, MARGIN_FOR_PREFILTER, MAX_SELECTED_VERTICES);
+        businessLogger.info(String.format("Prefiltered Vertices are : %s", logVerticeIds(prefilteredVertices)));
+        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(
+                verticesSelector.orderByClosestVertices(prefilteredVertices, marketPoints), 0.33,
+                verticesSelector.orderByClosestVerticesByAngle(prefilteredVertices, marketPoints), 0.33,
+                verticesSelector.orderByConstrainedVertices(prefilteredVertices, cnecRamBranchData), 0.34,
+                MAX_SELECTED_VERTICES);
+        businessLogger.info(String.format("Selected Vertices are : %s", logVerticeIds(ponderatedSelection)));
         final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(projectedVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);
         //TODO calculate IVA stuff
 
@@ -81,4 +93,7 @@ public class CoreValidIntradayHandler {
         MDC.put("gridcapa-task-id", coreValidIntradayRequest.getId());
     }
 
+    private String logVerticeIds(List<Vertex> vertices) {
+        return vertices.stream().mapToInt(Vertex::vertexId).mapToObj(Integer::toString).reduce((s, s2) -> s + ", "+s2).orElse("");
+    }
 }

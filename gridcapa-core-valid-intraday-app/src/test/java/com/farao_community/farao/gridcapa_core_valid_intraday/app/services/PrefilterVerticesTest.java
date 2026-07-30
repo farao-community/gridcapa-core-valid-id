@@ -13,6 +13,7 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.Core
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayFileResource;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.NetPositionHistory;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.Season;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.repositories.NetPositionHistoryRepository;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Load;
@@ -52,14 +53,15 @@ class PrefilterVerticesTest {
     private CoreHubsConfiguration coreHubsConfiguration;
 
     @Autowired
-    private NetPositionHistoryService netPositionHistoryService;
+    private NetPositionHistoryRepository netPositionHistoryRepository;
 
     private static final OffsetDateTime TEST_DATE_TIME = OffsetDateTime.parse("2021-07-22T22:30Z");
 
     @BeforeEach
     void initDatabase() {
+        netPositionHistoryRepository.deleteAll();
         final List<CoreHub> coreHubs = coreHubsConfiguration.getCoreHubs();
-        netPositionHistoryService.saveAll(createNphsFromSeason(Season.SUMMER, coreHubs));
+        netPositionHistoryRepository.saveAll(createNphsFromSeason(Season.SUMMER, coreHubs));
     }
 
     @Test
