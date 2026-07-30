@@ -62,7 +62,8 @@ public class CoreValidIntradayHandler {
         final OffsetDateTime targetProcessDateTime = coreValidIntradayRequest.getTimestamp();
         final String formattedTimestamp = TIMESTAMP_FORMATTER.format(targetProcessDateTime);
         final CoreValidIntradayTaskParameters coreValidIntradayTaskParameters = new CoreValidIntradayTaskParameters(coreValidIntradayRequest.getTaskParameterList());
-        businessLogger.info("Starting computation of request id: {}, for timestamp: {}, task parameters are:{}", coreValidIntradayRequest.getId(), formattedTimestamp, coreValidIntradayTaskParameters.toJsonString());
+        final String jsonString = coreValidIntradayTaskParameters.toJsonString();
+        businessLogger.info("Starting computation of request id: {}, for timestamp: {}, task parameters are: {}", coreValidIntradayRequest.getId(), formattedTimestamp, jsonString);
         //TODO import stuff
         final FlowBasedDomainDocument flowBasedDomainCnecRam = fileImporter.importCnecRamFile(coreValidIntradayRequest.getCnecRam());
         final List<Vertex> importedVertices = fileImporter.importVertices(coreValidIntradayRequest.getVertices());
@@ -79,9 +80,9 @@ public class CoreValidIntradayHandler {
         final List<CnecRamBranchData> cnecRamBranchData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam);
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, cnecRamBranchData, coreHubsConfiguration.getCoreHubs());
         final List<Vertex> prefilteredVertices = prefilterVertices.prefilterVertices(targetProcessDateTime, marketPoints, network, projectedVertices, coreValidIntradayTaskParameters);
-        businessLogger.info(String.format("Prefiltered Vertices are : %s", logVerticeIds(prefilteredVertices)));
+        businessLogger.info("Prefiltered Vertices are : {}", logVerticeIds(prefilteredVertices));
         final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(prefilteredVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);
-        businessLogger.info(String.format("Selected Vertices are : %s", logVerticeIds(ponderatedSelection)));
+        businessLogger.info("Selected Vertices are : {}", logVerticeIds(ponderatedSelection));
         //TODO calculate IVA stuff
 
         //TODO output IVAs
