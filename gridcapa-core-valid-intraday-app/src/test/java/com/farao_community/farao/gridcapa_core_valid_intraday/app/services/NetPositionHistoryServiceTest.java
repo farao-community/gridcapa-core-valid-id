@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -45,67 +46,67 @@ class NetPositionHistoryServiceTest {
         final Set<NetPositionHistory> nphsSummer = createNphsFromSeason(Season.SUMMER, coreHubs);
         final Set<NetPositionHistory> nphsAutumn = createNphsFromSeason(Season.AUTUMN, coreHubs);
         final Set<NetPositionHistory> nphsWinter = createNphsFromSeason(Season.WINTER, coreHubs);
-        final List<NetPositionHistory> springSaved = netPositionHistoryService.saveAll(nphsSpring);
-        final List<NetPositionHistory> summerSaved = netPositionHistoryService.saveAll(nphsSummer);
-        final List<NetPositionHistory> autumnSaved = netPositionHistoryService.saveAll(nphsAutumn);
-        final List<NetPositionHistory> winterSaved = netPositionHistoryService.saveAll(nphsWinter);
-        final OffsetDateTime winter1 = OffsetDateTime.of(LocalDateTime.of(1999, 1, 1, 1, 32, 59), ZoneOffset.of("+01:00"));
+        netPositionHistoryService.saveAll(nphsSpring);
+        netPositionHistoryService.saveAll(nphsSummer);
+        netPositionHistoryService.saveAll(nphsAutumn);
+        netPositionHistoryService.saveAll(nphsWinter);
+        final OffsetDateTime winter1 = OffsetDateTime.of(LocalDateTime.of(1999, Month.JANUARY, 1, 1, 32, 59), ZoneOffset.of("+01:00"));
 
         final Set<NetPositionHistory> winter1Result = netPositionHistoryService.getNpHistoryForTimestamp(winter1);
         Assertions.assertThat(winter1Result)
                 .first()
                 .hasFieldOrPropertyWithValue("season", Season.WINTER);
 
-        final OffsetDateTime winter2 = OffsetDateTime.of(LocalDateTime.of(2021, 3, 22, 1, 32, 59), ZoneOffset.of("+01:00"));
+        final OffsetDateTime winter2 = OffsetDateTime.of(LocalDateTime.of(2021, Month.MARCH, 22, 1, 32, 59), ZoneOffset.of("+01:00"));
 
         final Set<NetPositionHistory> winter2Result = netPositionHistoryService.getNpHistoryForTimestamp(winter2);
         Assertions.assertThat(winter2Result)
                 .first()
                 .hasFieldOrPropertyWithValue("season", Season.WINTER);
 
-        final OffsetDateTime winter3 = OffsetDateTime.of(LocalDateTime.of(2025, 12, 21, 1, 32, 59), ZoneOffset.of("+01:00"));
+        final OffsetDateTime winter3 = OffsetDateTime.of(LocalDateTime.of(2025, Month.DECEMBER, 21, 1, 32, 59), ZoneOffset.of("+01:00"));
 
         final Set<NetPositionHistory> winter3Result = netPositionHistoryService.getNpHistoryForTimestamp(winter3);
         Assertions.assertThat(winter3Result)
                 .first()
                 .hasFieldOrPropertyWithValue("season", Season.WINTER);
 
-        final OffsetDateTime spring1 = OffsetDateTime.of(LocalDateTime.of(2021, 3, 23, 1, 32, 59), ZoneOffset.of("+01:00"));
+        final OffsetDateTime spring1 = OffsetDateTime.of(LocalDateTime.of(2021, Month.MARCH, 23, 1, 32, 59), ZoneOffset.of("+01:00"));
 
         final Set<NetPositionHistory> spring1Result = netPositionHistoryService.getNpHistoryForTimestamp(spring1);
         Assertions.assertThat(spring1Result)
                 .first()
                 .hasFieldOrPropertyWithValue("season", Season.SPRING);
 
-        final OffsetDateTime spring2 = OffsetDateTime.of(LocalDateTime.of(2025, 6, 21, 1, 32, 59), ZoneOffset.of("+02:00"));
+        final OffsetDateTime spring2 = OffsetDateTime.of(LocalDateTime.of(2025, Month.JUNE, 21, 1, 32, 59), ZoneOffset.of("+02:00"));
 
         final Set<NetPositionHistory> spring2Result = netPositionHistoryService.getNpHistoryForTimestamp(spring2);
         Assertions.assertThat(spring2Result)
                 .first()
                 .hasFieldOrPropertyWithValue("season", Season.SPRING);
 
-        final OffsetDateTime summer1 = OffsetDateTime.of(LocalDateTime.of(2021, 6, 22, 1, 32, 59), ZoneOffset.of("+02:00"));
+        final OffsetDateTime summer1 = OffsetDateTime.of(LocalDateTime.of(2021, Month.JUNE, 22, 1, 32, 59), ZoneOffset.of("+02:00"));
 
         final Set<NetPositionHistory> summer1Result = netPositionHistoryService.getNpHistoryForTimestamp(summer1);
         Assertions.assertThat(summer1Result)
                 .first()
                 .hasFieldOrPropertyWithValue("season", Season.SUMMER);
 
-        final OffsetDateTime summer2 = OffsetDateTime.of(LocalDateTime.of(2025, 9, 22, 1, 32, 59), ZoneOffset.of("+02:00"));
+        final OffsetDateTime summer2 = OffsetDateTime.of(LocalDateTime.of(2025, Month.SEPTEMBER, 22, 1, 32, 59), ZoneOffset.of("+02:00"));
 
         final Set<NetPositionHistory> summer2Result = netPositionHistoryService.getNpHistoryForTimestamp(summer2);
         Assertions.assertThat(summer2Result)
                 .first()
                 .hasFieldOrPropertyWithValue("season", Season.SUMMER);
 
-        final OffsetDateTime autumn1 = OffsetDateTime.of(LocalDateTime.of(2021, 9, 23, 1, 32, 59), ZoneOffset.of("+02:00"));
+        final OffsetDateTime autumn1 = OffsetDateTime.of(LocalDateTime.of(2021, Month.SEPTEMBER, 23, 1, 32, 59), ZoneOffset.of("+02:00"));
 
         final Set<NetPositionHistory> autumn1Result = netPositionHistoryService.getNpHistoryForTimestamp(autumn1);
         Assertions.assertThat(autumn1Result)
                 .first()
                 .hasFieldOrPropertyWithValue("season", Season.AUTUMN);
 
-        final OffsetDateTime autumn2 = OffsetDateTime.of(LocalDateTime.of(2025, 12, 20, 1, 32, 59), ZoneOffset.of("+01:00"));
+        final OffsetDateTime autumn2 = OffsetDateTime.of(LocalDateTime.of(2025, Month.DECEMBER, 20, 1, 32, 59), ZoneOffset.of("+01:00"));
 
         final Set<NetPositionHistory> autumn2Result = netPositionHistoryService.getNpHistoryForTimestamp(autumn2);
         Assertions.assertThat(autumn2Result)

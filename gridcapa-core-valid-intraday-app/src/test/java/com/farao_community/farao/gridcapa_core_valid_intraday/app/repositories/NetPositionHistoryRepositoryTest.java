@@ -6,7 +6,6 @@
  */
 package com.farao_community.farao.gridcapa_core_valid_intraday.app.repositories;
 
-import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHub;
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsConfiguration;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.NetPositionHistory;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.Season;
@@ -15,10 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.List;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
+
+import static com.farao_community.farao.gridcapa_core_valid_intraday.app.utils.TestUtils.createNphsFromSeason;
 
 @SpringBootTest
 class NetPositionHistoryRepositoryTest {
@@ -42,24 +40,5 @@ class NetPositionHistoryRepositoryTest {
         Assertions.assertThat(netPositionHistoryRepository.findAllBySeason(Season.SUMMER))
                 .isNotEmpty()
                 .hasSize(coreHubsConfiguration.getCoreHubs().size());
-    }
-
-    //TODO refactor into utils test class
-    Set<NetPositionHistory> createNphsFromSeason(final Season season,
-                                                 final List<CoreHub> coreHubs) {
-        return coreHubs.stream()
-                .map(ch -> createNphFromSeasonAndCode(ch.ramcep2Code(), season))
-                .collect(Collectors.toSet());
-    }
-
-    NetPositionHistory createNphFromSeasonAndCode(final String ramcep2Code,
-                                                  final Season season) {
-        final NetPositionHistory nph = new NetPositionHistory();
-        nph.setId(UUID.randomUUID());
-        nph.setSeason(season);
-        nph.setHubRamcep2Code(ramcep2Code);
-        nph.setMinimumNetPosition(1.0);
-        nph.setMaximumNetPosition(99.0);
-        return nph;
     }
 }
