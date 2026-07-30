@@ -9,6 +9,7 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHub;
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsConfiguration;
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
+import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.CoreValidIntradayInvalidDataException;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayFileResource;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.NetPositionHistory;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.Season;
@@ -21,22 +22,18 @@ import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.assertj.core.api.Assertions;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,10 +59,7 @@ class PrefilterVerticesTest {
     @BeforeEach
     void initDatabase() {
         final List<CoreHub> coreHubs = coreHubsConfiguration.getCoreHubs();
-        netPositionHistoryService.saveAll(createNphsFromSeason(Season.SPRING, coreHubs));
         netPositionHistoryService.saveAll(createNphsFromSeason(Season.SUMMER, coreHubs));
-        netPositionHistoryService.saveAll(createNphsFromSeason(Season.AUTUMN, coreHubs));
-        netPositionHistoryService.saveAll(createNphsFromSeason(Season.WINTER, coreHubs));
     }
 
     @Test
@@ -77,13 +71,20 @@ class PrefilterVerticesTest {
         Assertions.assertThat(verticesResult1)
                 .isEqualTo(testVertices);
 
+        //first prefilter ko: no season data
+        Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class)
+                .isThrownBy(() -> prefilterVertices.prefilterVertices(OffsetDateTime.parse("2021-12-31T22:30Z"), getTestRefProg(), getTestEmptyNetwork(), testVertices, 0.0, 3))
+                .withMessage("CoreHub configuration for net position history missing for hub : Belgique");
+
         //first prefilter ok but second prefilter no generators
-        Assertions.assertThatThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetwork(), testVertices, 0.0, 3))
-                .hasMessage("No generation on network for hub : Belgique");
+        Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class)
+                .isThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetwork(), testVertices, 0.0, 3))
+                .withMessage("No generation on network for hub : Belgique");
 
         //first prefilter ok but second prefilter no loads
-        Assertions.assertThatThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetworkWithCountryGeneraor(Country.BE), testVertices, 0.0, 3))
-                .hasMessage("No load on network for hub : Belgique");
+        Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class)
+                .isThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetworkWithCountryGeneraor(Country.BE), testVertices, 0.0, 3))
+                .withMessage("No load on network for hub : Belgique");
 
         //both filters ok but less than max selected vertices param
         final List<Vertex> verticesResult2 = prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestNetwork(), testVertices, 0.0, 5);
