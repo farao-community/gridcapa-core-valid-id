@@ -167,7 +167,7 @@ public class PrefilterVertices {
                 .filter(isInCountry(coreHub.country()).and(isConnected()))
                 .map(Generator::getMaxP)
                 .reduce(Double::sum)
-                .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("No load on network for hub : %s", coreHub.name())));
+                .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("No generation on network for hub : %s", coreHub.name())));
     }
 
     private Double getLoadForHub(final Network network,
