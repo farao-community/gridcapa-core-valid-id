@@ -45,7 +45,11 @@ public class CoreValidIntradayHandler {
     private final CoreHubsConfiguration coreHubsConfiguration;
     private final Logger businessLogger;
 
-    public CoreValidIntradayHandler(final FileImporter fileImporter, final Logger businessLogger, final PrefilterVertices prefilterVertices, final VerticesSelector verticesSelector, final CoreHubsConfiguration coreHubsConfiguration) {
+    public CoreValidIntradayHandler(final FileImporter fileImporter,
+                                    final Logger businessLogger,
+                                    final PrefilterVertices prefilterVertices,
+                                    final VerticesSelector verticesSelector,
+                                    final CoreHubsConfiguration coreHubsConfiguration) {
         this.fileImporter = fileImporter;
         this.prefilterVertices = prefilterVertices;
         this.verticesSelector = verticesSelector;
@@ -55,10 +59,10 @@ public class CoreValidIntradayHandler {
 
     public String handleCoreValidIntradayRequest(final CoreValidIntradayRequest coreValidIntradayRequest) {
         setUpEventLogging(coreValidIntradayRequest);
-        businessLogger.info(String.format("Starting computation of request id: %s",coreValidIntradayRequest.getId()));
-        final CoreValidIntradayTaskParameters coreValidIntradayTaskParameters = new CoreValidIntradayTaskParameters(coreValidIntradayRequest.getTaskParameterList());
         final OffsetDateTime targetProcessDateTime = coreValidIntradayRequest.getTimestamp();
         final String formattedTimestamp = TIMESTAMP_FORMATTER.format(targetProcessDateTime);
+        final CoreValidIntradayTaskParameters coreValidIntradayTaskParameters = new CoreValidIntradayTaskParameters(coreValidIntradayRequest.getTaskParameterList());
+        businessLogger.info("Starting computation of request id: {}, for timestamp: {}, task parameters are:{}", coreValidIntradayRequest.getId(), formattedTimestamp, coreValidIntradayTaskParameters.toJsonString());
         //TODO import stuff
         final FlowBasedDomainDocument flowBasedDomainCnecRam = fileImporter.importCnecRamFile(coreValidIntradayRequest.getCnecRam());
         final List<Vertex> importedVertices = fileImporter.importVertices(coreValidIntradayRequest.getVertices());
@@ -74,15 +78,10 @@ public class CoreValidIntradayHandler {
         //select vertices
         final List<CnecRamBranchData> cnecRamBranchData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam);
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, cnecRamBranchData, coreHubsConfiguration.getCoreHubs());
-        final List<Vertex> prefilteredVertices = prefilterVertices.prefilterVertices(targetProcessDateTime, marketPoints, network, projectedVertices, MARGIN_FOR_PREFILTER, MAX_SELECTED_VERTICES);
+        final List<Vertex> prefilteredVertices = prefilterVertices.prefilterVertices(targetProcessDateTime, marketPoints, network, projectedVertices, coreValidIntradayTaskParameters);
         businessLogger.info(String.format("Prefiltered Vertices are : %s", logVerticeIds(prefilteredVertices)));
-        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(
-                verticesSelector.orderByClosestVertices(prefilteredVertices, marketPoints), 0.33,
-                verticesSelector.orderByClosestVerticesByAngle(prefilteredVertices, marketPoints), 0.33,
-                verticesSelector.orderByConstrainedVertices(prefilteredVertices, cnecRamBranchData), 0.34,
-                MAX_SELECTED_VERTICES);
-        businessLogger.info(String.format("Selected Vertices are : %s", logVerticeIds(ponderatedSelection)));
         final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(projectedVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);
+        businessLogger.info(String.format("Selected Vertices are : %s", logVerticeIds(ponderatedSelection)));
         //TODO calculate IVA stuff
 
         //TODO output IVAs
@@ -94,6 +93,6 @@ public class CoreValidIntradayHandler {
     }
 
     private String logVerticeIds(List<Vertex> vertices) {
-        return vertices.stream().mapToInt(Vertex::vertexId).mapToObj(Integer::toString).reduce((s, s2) -> s + ", "+s2).orElse("");
+        return vertices.stream().mapToInt(Vertex::vertexId).mapToObj(Integer::toString).reduce((s, s2) -> s + ", " + s2).orElse("");
     }
 }

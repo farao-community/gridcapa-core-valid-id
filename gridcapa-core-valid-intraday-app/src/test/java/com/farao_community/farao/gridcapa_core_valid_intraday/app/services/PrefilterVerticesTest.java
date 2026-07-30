@@ -11,7 +11,6 @@ import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsCo
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.CoreValidIntradayInvalidDataException;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayFileResource;
-import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.NetPositionHistory;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.Season;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.repositories.NetPositionHistoryRepository;
 import com.powsybl.iidm.network.Country;
@@ -29,15 +28,12 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.farao_community.farao.gridcapa_core_valid_intraday.app.utils.TestUtils.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -69,32 +65,32 @@ class PrefilterVerticesTest {
 
         //less vertices than max selected vertices: should return entry
         final List<Vertex> testVertices = getTestVertices();
-        final List<Vertex> verticesResult1 = prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetwork(), testVertices, 0.0, 5);
+        final List<Vertex> verticesResult1 = prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetwork(), testVertices, getTestCoreValidIntradayTaskParameters());
         Assertions.assertThat(verticesResult1)
                 .isEqualTo(testVertices);
 
         //first prefilter ko: no season data
         Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class)
-                .isThrownBy(() -> prefilterVertices.prefilterVertices(OffsetDateTime.parse("2021-12-31T22:30Z"), getTestRefProg(), getTestEmptyNetwork(), testVertices, 0.0, 3))
+                .isThrownBy(() -> prefilterVertices.prefilterVertices(OffsetDateTime.parse("2021-12-31T22:30Z"), getTestRefProg(), getTestEmptyNetwork(), testVertices, getTestCoreValidIntradayTaskParametersMaxSelect2()))
                 .withMessage("CoreHub configuration for net position history missing for hub : Belgique");
 
         //first prefilter ok but second prefilter no generators
         Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class)
-                .isThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetwork(), testVertices, 0.0, 3))
+                .isThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetwork(), testVertices, getTestCoreValidIntradayTaskParametersMaxSelect2()))
                 .withMessage("No generation on network for hub : Belgique");
 
         //first prefilter ok but second prefilter no loads
         Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class)
-                .isThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetworkWithCountryGeneraor(Country.BE), testVertices, 0.0, 3))
+                .isThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestEmptyNetworkWithCountryGeneraor(Country.BE), testVertices, getTestCoreValidIntradayTaskParametersMaxSelect2()))
                 .withMessage("No load on network for hub : Belgique");
 
         //both filters ok but less than max selected vertices param
-        final List<Vertex> verticesResult2 = prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestNetwork(), testVertices, 0.0, 5);
+        final List<Vertex> verticesResult2 = prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestNetwork(), testVertices, getTestCoreValidIntradayTaskParameters());
         Assertions.assertThat(verticesResult2)
                 .isEqualTo(testVertices);
 
         //both filters ok
-        final List<Vertex> verticesResult3 = prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestNetwork(), testVertices, 0.0, 3);
+        final List<Vertex> verticesResult3 = prefilterVertices.prefilterVertices(TEST_DATE_TIME, getTestRefProg(), getTestNetwork(), testVertices, getTestCoreValidIntradayTaskParametersMaxSelect2());
         Assertions.assertThat(verticesResult3)
                 .hasSize(4);
         Assertions.assertThat(verticesResult3.stream().map(Vertex::vertexId).toList())
@@ -167,29 +163,5 @@ class PrefilterVerticesTest {
 
     private Network getTestEmptyNetwork() {
         return mock(Network.class);
-    }
-
-    //TODO refactor into utils test class
-    private CoreValidIntradayFileResource createFileResource(final String filename,
-                                                             final URL resource) {
-        return new CoreValidIntradayFileResource(filename, resource.toExternalForm());
-    }
-
-    Set<NetPositionHistory> createNphsFromSeason(final Season season,
-                                                 final List<CoreHub> coreHubs) {
-        return coreHubs.stream()
-                .map(ch -> createNphFromSeasonAndCode(ch.ramcep2Code(), season))
-                .collect(Collectors.toSet());
-    }
-
-    NetPositionHistory createNphFromSeasonAndCode(final String ramcep2Code,
-                                                  final Season season) {
-        final NetPositionHistory nph = new NetPositionHistory();
-        nph.setId(UUID.randomUUID());
-        nph.setSeason(season);
-        nph.setHubRamcep2Code(ramcep2Code);
-        nph.setMinimumNetPosition(-401.0);
-        nph.setMaximumNetPosition(999.0);
-        return nph;
     }
 }

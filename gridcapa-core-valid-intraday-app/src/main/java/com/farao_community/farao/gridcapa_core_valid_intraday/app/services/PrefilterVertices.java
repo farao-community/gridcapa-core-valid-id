@@ -10,6 +10,7 @@ import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHub;
 import com.farao_community.farao.gridcapa_core_valid_commons.core_hub.CoreHubsConfiguration;
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.exception.CoreValidIntradayInvalidDataException;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.entities.NetPositionHistory;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Generator;
@@ -48,13 +49,13 @@ public class PrefilterVertices {
             final ReferenceProgram marketPoints,
             final Network network,
             final List<Vertex> projectedVertices,
-            final double margin,
-            final int maxSelectedVertices) {
+            final CoreValidIntradayTaskParameters parameters) {
+        final int maxSelectedVertices = parameters.getMaxSelectedVertices();
         final List<Vertex> historicalFilteredVertices = historicPositionsFilter(targetProcessDateTime, marketPoints, projectedVertices);
         if (isListSmallerThanMax(historicalFilteredVertices, maxSelectedVertices)) {
             return projectedVertices;
         }
-        final List<Vertex> hubCapacityFilteredVertices = hubCapacityFilter(network, historicalFilteredVertices, margin);
+        final List<Vertex> hubCapacityFilteredVertices = hubCapacityFilter(network, historicalFilteredVertices, parameters.getMarginForPrefilter());
         if (isListSmallerThanMax(hubCapacityFilteredVertices, maxSelectedVertices)) {
             return projectedVertices;
         }
@@ -117,9 +118,7 @@ public class PrefilterVertices {
         final Set<NetPositionHistory> npHistory = netPositionHistoryService.getNpHistoryForTimestamp(targetProcessDateTime);
         final Map<CoreHub, NetPositionHistory> coreHubNphs = mapCoreHubsToNetPositionHistories(npHistory);
         final Set<NetPositionHistory> npHistoryToSave = new HashSet<>();
-        coreHubNphs.forEach((ch, nph) -> {
-            updateMarketPositionValues(marketPoints, ch, nph, npHistoryToSave);
-        });
+        coreHubNphs.forEach((ch, nph) -> updateMarketPositionValues(marketPoints, ch, nph, npHistoryToSave));
         netPositionHistoryService.saveAll(npHistoryToSave);
         return coreHubNphs;
     }
