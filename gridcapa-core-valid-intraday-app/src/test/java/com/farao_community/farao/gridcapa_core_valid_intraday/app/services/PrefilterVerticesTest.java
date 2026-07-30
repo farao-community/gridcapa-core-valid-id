@@ -23,6 +23,7 @@ import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
@@ -55,10 +56,14 @@ class PrefilterVerticesTest {
     private static final OffsetDateTime TEST_DATE_TIME = OffsetDateTime.parse("2021-07-22T22:30Z");
 
     @BeforeEach
-    void initDatabase() {
-        netPositionHistoryRepository.deleteAll();
+    void setup() {
         final List<CoreHub> coreHubs = coreHubsConfiguration.getCoreHubs();
         netPositionHistoryRepository.saveAll(createNphsFromSeason(Season.SUMMER, coreHubs));
+    }
+
+    @AfterEach
+    void tearDown() {
+        netPositionHistoryRepository.deleteAll();
     }
 
     @Test

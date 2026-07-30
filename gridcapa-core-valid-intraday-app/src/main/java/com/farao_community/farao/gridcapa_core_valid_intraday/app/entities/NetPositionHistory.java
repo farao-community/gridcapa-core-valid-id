@@ -8,14 +8,18 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import java.util.UUID;
 
 @Entity
-@Table(indexes = { @Index(columnList = "hubRamcep2Code", name = "season") })
+@Table(indexes = {@Index(columnList = "hubRamcep2Code,season", name = "net-position-history-index")},
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"hubRamcep2Code", "season"}, name = "net-position-history-unique-constraint")})
 public class NetPositionHistory {
 
     @Id
@@ -25,6 +29,7 @@ public class NetPositionHistory {
     @Column(name = "hubRamcep2Code", nullable = false)
     private String hubRamcep2Code;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "season", nullable = false)
     private Season season;
 
