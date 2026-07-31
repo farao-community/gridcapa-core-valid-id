@@ -1,0 +1,53 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                   http://www.liquibase.org/xml/ns/pro
+                   http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd
+                   http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="MSCH" id="init-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="net-position-history"/>
+            </not>
+        </preConditions>
+        <createTable tableName="net-position-history">
+            <column name="id" type="bigint">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="net_position_history_pkey"/>
+            </column>
+            <column name="hub_ramcep2_code" type="VARCHAR(9)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="season" type="VARCHAR(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="minimum_net_position" type="float(53)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maximum_net_position" type="float(53) ">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint constraintName="uk-net-position-history"
+                             tableName="net-position-history"
+                             columnNames="hub_ramcep2_code,season"/>
+        <createIndex indexName="net_position_history_idx" tableName="net-position-history">
+            <column name="hub_ramcep2_code"/>
+            <column name="season"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="MSCH" id="addAutoIncrement-init-1">
+        <addAutoIncrement columnDataType="bigint"
+                          columnName="id"
+                          defaultOnNull="false"
+                          generationType="ALWAYS"
+                          tableName="net-position-history"/>
+    </changeSet>
+</databaseChangeLog>

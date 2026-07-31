@@ -15,35 +15,34 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import java.util.UUID;
-
 @Entity
-@Table(indexes = {@Index(columnList = "hubRamcep2Code,season", name = "net-position-history-index")},
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"hubRamcep2Code", "season"}, name = "net-position-history-unique-constraint")})
+@Table(name = "net-position-history",
+        indexes = {@Index(columnList = "hub_ramcep2_code,season", name = "net_position_history_idx")},
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"hub_ramcep2_code", "season"}, name = "uk-net-position-history")})
 public class NetPositionHistory {
 
     @Id
     @Column(name = "id", nullable = false)
-    private UUID id;
+    private int id;
 
-    @Column(name = "hubRamcep2Code", nullable = false)
+    @Column(name = "hub_ramcep2_code", nullable = false)
     private String hubRamcep2Code;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "season", nullable = false)
     private Season season;
 
-    @Column(name = "minimumNetPosition", nullable = false)
+    @Column(name = "minimum_net_position", nullable = false)
     private double minimumNetPosition;
 
-    @Column(name = "maximumNetPosition", nullable = false)
+    @Column(name = "maximum_net_position", nullable = false)
     private double maximumNetPosition;
 
-    public UUID getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(final UUID id) {
+    public void setId(final int id) {
         this.id = id;
     }
 

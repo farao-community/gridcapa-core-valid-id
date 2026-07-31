@@ -8,26 +8,24 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.entities;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class NetPositionHistoryTest {
 
     @Test
     void testGettersAndSetters() {
-        final UUID uuid = UUID.randomUUID();
+        final int id = 55;
         final String hubRamcep2Code = "FR";
         final Season season = Season.SUMMER;
         final double minimumNetPosition = 123.1;
         final double maximumNetPosition = 4000.0;
         final NetPositionHistory npHistory = new NetPositionHistory();
-        npHistory.setId(uuid);
+        npHistory.setId(id);
         npHistory.setHubRamcep2Code(hubRamcep2Code);
         npHistory.setSeason(season);
         npHistory.setMinimumNetPosition(minimumNetPosition);
         npHistory.setMaximumNetPosition(maximumNetPosition);
-        assertEquals(uuid, npHistory.getId());
+        assertEquals(id, npHistory.getId());
         assertEquals(hubRamcep2Code, npHistory.getHubRamcep2Code());
         assertEquals(season, npHistory.getSeason());
         assertEquals(minimumNetPosition, npHistory.getMinimumNetPosition(), 0.2);

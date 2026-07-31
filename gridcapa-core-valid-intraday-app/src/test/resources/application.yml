@@ -1,4 +1,13 @@
 spring:
+  application:
+    name: core-valid-intraday
+  liquibase:
+    enabled: false
+  jpa:
+    properties:
+      hibernate:
+        timezone:
+          default_storage: NORMALIZE_UTC
   rabbitmq:
     host: localhost
     port: 5672
