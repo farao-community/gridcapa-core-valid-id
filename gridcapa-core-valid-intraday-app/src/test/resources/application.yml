@@ -1,4 +1,13 @@
 spring:
+  application:
+    name: core-valid-intraday
+  liquibase:
+    enabled: false
+  jpa:
+    properties:
+      hibernate:
+        timezone:
+          default_storage: NORMALIZE_UTC
   rabbitmq:
     host: localhost
     port: 5672
@@ -13,7 +22,13 @@ spring:
           binder: rabbit
           destination: task-status-updated
 
+
 core-valid-intraday-runner:
+  seasons:
+    spring-start-date: 23-03
+    summer-start-date: 22-06
+    autumn-start-date: 23-09
+    winter-start-date: 21-12
   async-time-out: 600000 # 10min (10*60*1000)
   bindings:
     request:

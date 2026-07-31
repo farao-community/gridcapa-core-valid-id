@@ -14,6 +14,7 @@ import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CnecRam
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.CnecRamMapper;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.FileImporter;
+import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.PrefilterVertices;
 import com.farao_community.farao.gridcapa_core_valid_intraday.app.services.VerticesSelector;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import com.powsybl.glsk.api.GlskDocument;
@@ -21,12 +22,14 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.openrao.commons.EICode;
 import com.powsybl.openrao.data.crac.io.fbconstraint.FbConstraintCreationContext;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
+import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Marc Schwitzguebel {@literal <marc.schwitzguebel_externe at rte-france.com>}
@@ -38,20 +41,30 @@ public class CoreValidIntradayHandler {
     private static final String RTE_EI_CODE = "10YFR-RTE------C";
 
     private final FileImporter fileImporter;
+    private final PrefilterVertices prefilterVertices;
     private final VerticesSelector verticesSelector;
     private final CoreHubsConfiguration coreHubsConfiguration;
+    private final Logger businessLogger;
 
-    public CoreValidIntradayHandler(final FileImporter fileImporter, final VerticesSelector verticesSelector, final CoreHubsConfiguration coreHubsConfiguration) {
+    public CoreValidIntradayHandler(final FileImporter fileImporter,
+                                    final Logger businessLogger,
+                                    final PrefilterVertices prefilterVertices,
+                                    final VerticesSelector verticesSelector,
+                                    final CoreHubsConfiguration coreHubsConfiguration) {
         this.fileImporter = fileImporter;
+        this.prefilterVertices = prefilterVertices;
         this.verticesSelector = verticesSelector;
         this.coreHubsConfiguration = coreHubsConfiguration;
+        this.businessLogger = businessLogger;
     }
 
     public String handleCoreValidIntradayRequest(final CoreValidIntradayRequest coreValidIntradayRequest) {
         setUpEventLogging(coreValidIntradayRequest);
-        final CoreValidIntradayTaskParameters coreValidIntradayTaskParameters = new CoreValidIntradayTaskParameters(coreValidIntradayRequest.getTaskParameterList());
         final OffsetDateTime targetProcessDateTime = coreValidIntradayRequest.getTimestamp();
         final String formattedTimestamp = TIMESTAMP_FORMATTER.format(targetProcessDateTime);
+        final CoreValidIntradayTaskParameters coreValidIntradayTaskParameters = new CoreValidIntradayTaskParameters(coreValidIntradayRequest.getTaskParameterList());
+        final String jsonString = coreValidIntradayTaskParameters.toJsonString();
+        businessLogger.info("Starting computation of request id: {}, for timestamp: {}, task parameters are: {}", coreValidIntradayRequest.getId(), formattedTimestamp, jsonString);
         //TODO import stuff
         final FlowBasedDomainDocument flowBasedDomainCnecRam = fileImporter.importCnecRamFile(coreValidIntradayRequest.getCnecRam());
         final List<Vertex> importedVertices = fileImporter.importVertices(coreValidIntradayRequest.getVertices());
@@ -64,10 +77,13 @@ public class CoreValidIntradayHandler {
                     .put(new EICode(RTE_EI_CODE),
                          fileImporter.importAggregatedScheduleFile(coreValidIntradayRequest.getOcappiMarketPoint(), targetProcessDateTime).doubleValue());
         }
-        //TODO select vertices
+        //select vertices
         final List<CnecRamBranchData> cnecRamBranchData = CnecRamMapper.mapCnecRamToBranches(flowBasedDomainCnecRam);
         final List<Vertex> projectedVertices = VerticesUtils.getVerticesProjectedOnDomain(importedVertices, cnecRamBranchData, coreHubsConfiguration.getCoreHubs());
-        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(projectedVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);
+        final List<Vertex> prefilteredVertices = prefilterVertices.prefilterVertices(targetProcessDateTime, marketPoints, network, projectedVertices, coreValidIntradayTaskParameters);
+        businessLogger.info("Prefiltered Vertices are : {}", logVerticeIds(prefilteredVertices));
+        final List<Vertex> ponderatedSelection = verticesSelector.selectionSynthesis(prefilteredVertices, marketPoints, cnecRamBranchData, coreValidIntradayTaskParameters);
+        businessLogger.info("Selected Vertices are : {}", logVerticeIds(ponderatedSelection));
         //TODO calculate IVA stuff
 
         //TODO output IVAs
@@ -78,4 +94,7 @@ public class CoreValidIntradayHandler {
         MDC.put("gridcapa-task-id", coreValidIntradayRequest.getId());
     }
 
+    private String logVerticeIds(List<Vertex> vertices) {
+        return vertices.stream().mapToInt(Vertex::vertexId).mapToObj(Integer::toString).collect(Collectors.joining(", "));
+    }
 }

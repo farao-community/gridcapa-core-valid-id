@@ -1,7 +1,25 @@
 spring:
+  application:
+    name: core-valid-intraday
+  liquibase:
+    change-log: classpath:/db/changelog-master.xml
+  jpa:
+    properties:
+      hibernate:
+        timezone:
+          default_storage: NORMALIZE_UTC
+    hibernate:
+      ddl-auto: validate
   cloud:
     function:
       definition: request
+
+core-valid-intraday-runner:
+  seasons:
+    spring-start-date: 23-03
+    summer-start-date: 22-06
+    autumn-start-date: 23-09
+    winter-start-date: 21-12
 
 core-valid-commons:
   core-hubs:

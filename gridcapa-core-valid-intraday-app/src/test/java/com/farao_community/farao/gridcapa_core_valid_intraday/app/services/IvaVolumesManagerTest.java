@@ -8,7 +8,6 @@ package com.farao_community.farao.gridcapa_core_valid_intraday.app.services;
 
 import com.farao_community.farao.gridcapa_core_valid_commons.vertex.Vertex;
 import com.farao_community.farao.gridcapa_core_valid_intraday.api.resource.CoreValidIntradayFileResource;
-import com.farao_community.farao.gridcapa_core_valid_intraday.app.domain.CoreValidIntradayTaskParameters;
 import com.farao_community.gridcapa_core_valid_intraday.xsd.f645.FlowBasedDomainDocument;
 import com.powsybl.openrao.data.refprog.referenceprogram.ReferenceProgram;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +28,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
+import static com.farao_community.farao.gridcapa_core_valid_intraday.app.utils.TestUtils.getTestCoreValidIntradayTaskParameters;
 
 @SpringBootTest
 class IvaVolumesManagerTest {
@@ -61,7 +61,7 @@ class IvaVolumesManagerTest {
                                                             Map.of("CCCCCCCCCCCC", BigDecimal.valueOf(0.1)),
                                                             flowBasedDomainDocument);
         final RaoService rao = mock();
-        assertThat(mgr.computeIvaVolumes(100, rao, createTaskParameters()))
+        assertThat(mgr.computeIvaVolumes(100, rao, getTestCoreValidIntradayTaskParameters()))
                 .isNotEmpty()
                 .containsValue(ZERO);
 
@@ -78,7 +78,7 @@ class IvaVolumesManagerTest {
         Mockito.when(rao.computeIvaVolume(any(), any()))
                 .thenReturn(TEN);
 
-        assertThat(mgr.computeIvaVolumes(100, rao, createTaskParameters()))
+        assertThat(mgr.computeIvaVolumes(100, rao, getTestCoreValidIntradayTaskParameters()))
                 .isNotEmpty()
                 .doesNotContainValue(ZERO);
 
@@ -96,7 +96,7 @@ class IvaVolumesManagerTest {
         Mockito.when(rao.computeIvaVolume(any(), any()))
                 .thenReturn(eighty);
 
-        assertThat(mgr.computeIvaVolumes(100, rao, createTaskParameters()))
+        assertThat(mgr.computeIvaVolumes(100, rao, getTestCoreValidIntradayTaskParameters()))
                 .isNotEmpty()
                 .containsValue(BigDecimal.valueOf(65)) // value of maxIva is taken
                 .doesNotContainValue(eighty);
@@ -105,12 +105,5 @@ class IvaVolumesManagerTest {
 
     private Vertex mockVertex(final int frValue) {
         return new Vertex(1, Map.of("FR", frValue, "BE", -1000, "AT", 500));
-    }
-
-    private CoreValidIntradayTaskParameters createTaskParameters() {
-        CoreValidIntradayTaskParameters mock = mock(CoreValidIntradayTaskParameters.class);
-        when(mock.getFrmMarginPercentage()).thenReturn(5);
-        when(mock.getMinRamMccc()).thenReturn(20);
-        return mock;
     }
 }
