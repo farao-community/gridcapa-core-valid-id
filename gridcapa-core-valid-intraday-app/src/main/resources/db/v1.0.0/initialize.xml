@@ -14,7 +14,7 @@
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="net-position-history"/>
-            </not>
+           </not>
         </preConditions>
         <createTable tableName="net-position-history">
             <column name="id" type="bigint">
@@ -45,6 +45,9 @@
     </changeSet>
 
     <changeSet author="MSCH" id="addAutoIncrement-init-1">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="net-position-history"/>
+        </preConditions>
         <addAutoIncrement columnDataType="bigint"
                           columnName="id"
                           defaultOnNull="false"
@@ -52,6 +55,9 @@
                           tableName="net-position-history"/>
     </changeSet>
     <changeSet author="MSCH" id="addDefaultData-init-1">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="net-position-history"/>
+        </preConditions>
         <sql>
             INSERT INTO "net-position-history" ("hub_ramcep2_code", "season", "minimum_net_position", "maximum_net_position")
             VALUES ('AT', 'SPRING', 1000, 8000);

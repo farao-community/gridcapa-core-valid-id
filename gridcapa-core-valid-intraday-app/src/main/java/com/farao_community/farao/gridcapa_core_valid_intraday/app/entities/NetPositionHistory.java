@@ -10,6 +10,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
@@ -22,14 +24,15 @@ import jakarta.persistence.UniqueConstraint;
 public class NetPositionHistory {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private int id;
+    private long id;
 
-    @Column(name = "hub_ramcep2_code", nullable = false)
+    @Column(name = "hub_ramcep2_code", length = 9, nullable = false)
     private String hubRamcep2Code;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "season", nullable = false)
+    @Column(name = "season", length = 6, nullable = false)
     private Season season;
 
     @Column(name = "minimum_net_position", nullable = false)
@@ -38,11 +41,11 @@ public class NetPositionHistory {
     @Column(name = "maximum_net_position", nullable = false)
     private double maximumNetPosition;
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(final int id) {
+    public void setId(final long id) {
         this.id = id;
     }
 

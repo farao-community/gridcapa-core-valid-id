@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Marc Schwitzguebel {@literal <marc.schwitzguebel_externe at rte-france.com>}
@@ -94,6 +95,6 @@ public class CoreValidIntradayHandler {
     }
 
     private String logVerticeIds(List<Vertex> vertices) {
-        return vertices.stream().mapToInt(Vertex::vertexId).mapToObj(Integer::toString).reduce((s, s2) -> s + ", " + s2).orElse("");
+        return vertices.stream().mapToInt(Vertex::vertexId).mapToObj(Integer::toString).collect(Collectors.joining(", "));
     }
 }

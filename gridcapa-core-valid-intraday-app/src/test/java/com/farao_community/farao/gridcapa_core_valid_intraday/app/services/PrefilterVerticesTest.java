@@ -85,15 +85,15 @@ class PrefilterVerticesTest {
                 .withMessage("CoreHub configuration for net position history missing for hub : Belgique");
 
         //first prefilter ok but second prefilter no generators
-        Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class)
-                .isThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, testRefProg, testEmptyNetwork, testVertices, parametersMaxSelect2))
-                .withMessage("No generation on network for hub : Belgique");
+        final List<Vertex> verticesNoGen = prefilterVertices.prefilterVertices(TEST_DATE_TIME, testRefProg, testEmptyNetwork, testVertices, parametersMaxSelect2);
+        Assertions.assertThat(verticesNoGen)
+                .isEqualTo(testVertices);
 
         //first prefilter ok but second prefilter no loads
         final Network testEmptyNetworkWithCountryBE = getTestEmptyNetworkWithCountryGenerator(Country.BE);
-        Assertions.assertThatExceptionOfType(CoreValidIntradayInvalidDataException.class)
-                .isThrownBy(() -> prefilterVertices.prefilterVertices(TEST_DATE_TIME, testRefProg, testEmptyNetworkWithCountryBE, testVertices, parametersMaxSelect2))
-                .withMessage("No load on network for hub : Belgique");
+        final List<Vertex> verticesNoLoad = prefilterVertices.prefilterVertices(TEST_DATE_TIME, testRefProg, testEmptyNetworkWithCountryBE, testVertices, parametersMaxSelect2);
+        Assertions.assertThat(verticesNoLoad)
+                .isEqualTo(testVertices);
 
         //both filters ok but less than max selected vertices param
         final List<Vertex> verticesResult2 = prefilterVertices.prefilterVertices(TEST_DATE_TIME, testRefProg, getTestNetwork(), testVertices, getTestCoreValidIntradayTaskParameters());
@@ -140,7 +140,7 @@ class PrefilterVerticesTest {
     private Network getTestEmptyNetworkWithCountryGenerator(Country country) {
         final Network network = mock(Network.class);
         final Generator generator = getGenerator(country);
-        when(network.getGeneratorStream()).thenReturn(Stream.of(generator));
+        when(network.getGeneratorStream()).thenAnswer((Answer<Stream<Generator>>) invocation -> Stream.of(generator));
         return network;
     }
 

@@ -12,10 +12,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Set;
-import java.util.UUID;
 
 @Repository
-public interface NetPositionHistoryRepository extends JpaRepository<NetPositionHistory, UUID> {
+public interface NetPositionHistoryRepository extends JpaRepository<NetPositionHistory, Long> {
 
     Set<NetPositionHistory> findAllBySeason(Season season);
 }

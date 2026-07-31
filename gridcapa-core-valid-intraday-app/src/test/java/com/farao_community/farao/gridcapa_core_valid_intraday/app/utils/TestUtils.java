@@ -54,25 +54,16 @@ public final class TestUtils {
     public static Set<NetPositionHistory> createNphsFromSeason(final Season season,
                                                                final List<CoreHub> coreHubs) {
         Set<NetPositionHistory> set = new HashSet<>();
-        int count = 1;
-        switch (season) {
-            case SPRING -> count += 100;
-            case SUMMER -> count += 200;
-            case AUTUMN -> count += 300;
-            case WINTER -> count += 400;
-        }
         for (CoreHub ch : coreHubs) {
-            NetPositionHistory nphFromSeasonAndCode = createNphFromSeasonAndCode(ch.ramcep2Code(), season, count++);
+            NetPositionHistory nphFromSeasonAndCode = createNphFromSeasonAndCode(ch.ramcep2Code(), season);
             set.add(nphFromSeasonAndCode);
         }
         return set;
     }
 
     public static NetPositionHistory createNphFromSeasonAndCode(final String ramcep2Code,
-                                                                final Season season,
-                                                                final int id) {
+                                                                final Season season) {
         final NetPositionHistory nph = new NetPositionHistory();
-        nph.setId(id);
         nph.setSeason(season);
         nph.setHubRamcep2Code(ramcep2Code);
         nph.setMinimumNetPosition(-401.0);

@@ -25,12 +25,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.util.function.Predicate.not;
 
 @Service
 public class PrefilterVertices {
@@ -75,7 +77,7 @@ public class PrefilterVertices {
     private List<Vertex> hubCapacityFilter(final Network network,
                                            final List<Vertex> projectedVertices,
                                            final double margin) {
-        final Map<CoreHub, Pair<Double, Double>> generatorAndLoadByCoreHub = mapCoreHubsLoadAndGenerationToMinMax(network, margin);
+        final Map<CoreHub, Pair<Double, Double>> generatorAndLoadByCoreHub = mapCoreHubsGenerationAndLoadToMinMax(network, margin);
         return projectedVertices.stream()
                 .filter(vertex -> isVertexInCapacityBounds(vertex, generatorAndLoadByCoreHub))
                 .toList();
@@ -100,13 +102,11 @@ public class PrefilterVertices {
         final Map<String, Integer> coordinates = vertex.coordinates();
         return generatorAndLoadByCoreHub.entrySet()
                 .stream()
-                .map(entry -> {
+                .allMatch(entry -> {
                     final Integer vertexNetPosition = coordinates.get(entry.getKey().clusterVerticeCode());
                     return vertexNetPosition >= entry.getValue().getFirst()
                            && vertexNetPosition <= entry.getValue().getSecond();
-                })
-                .reduce((a, b) -> a && b)
-                .orElseThrow(getInvalidDataExceptionSupplier(vertex));
+                });
     }
 
     private static Supplier<CoreValidIntradayInvalidDataException> getInvalidDataExceptionSupplier(final Vertex vertex) {
@@ -117,16 +117,17 @@ public class PrefilterVertices {
                                                                             final ReferenceProgram marketPoints) {
         final Set<NetPositionHistory> npHistory = netPositionHistoryService.getNpHistoryForTimestamp(targetProcessDateTime);
         final Map<CoreHub, NetPositionHistory> coreHubNphs = mapCoreHubsToNetPositionHistories(npHistory);
-        final Set<NetPositionHistory> npHistoryToSave = new HashSet<>();
-        coreHubNphs.forEach((ch, nph) -> updateMarketPositionValues(marketPoints, ch, nph, npHistoryToSave));
+        final Set<NetPositionHistory> npHistoryToSave = coreHubNphs.entrySet()
+                .stream()
+                .map(entry -> updateMarketPositionValues(marketPoints, entry.getKey(), entry.getValue()))
+                .collect(Collectors.toSet());
         netPositionHistoryService.saveAll(npHistoryToSave);
         return coreHubNphs;
     }
 
-    private static void updateMarketPositionValues(final ReferenceProgram marketPoints,
-                                                   final CoreHub coreHub,
-                                                   final NetPositionHistory netPositionHistory,
-                                                   final Set<NetPositionHistory> npHistoryToSave) {
+    private static NetPositionHistory updateMarketPositionValues(final ReferenceProgram marketPoints,
+                                                                 final CoreHub coreHub,
+                                                                 final NetPositionHistory netPositionHistory) {
         final double marketPos = marketPoints.getGlobalNetPosition(new EICode(coreHub.country()));
         if (netPositionHistory.getMaximumNetPosition() < marketPos) {
             netPositionHistory.setMaximumNetPosition(marketPos);
@@ -134,7 +135,7 @@ public class PrefilterVertices {
         if (netPositionHistory.getMinimumNetPosition() > marketPos) {
             netPositionHistory.setMinimumNetPosition(marketPos);
         }
-        npHistoryToSave.add(netPositionHistory);
+        return netPositionHistory;
     }
 
     private Map<CoreHub, NetPositionHistory> mapCoreHubsToNetPositionHistories(final Set<NetPositionHistory> npHistory) {
@@ -146,36 +147,35 @@ public class PrefilterVertices {
         return coreHubsNph;
     }
 
-    private Map<CoreHub, Pair<Double, Double>> mapCoreHubsLoadAndGenerationToMinMax(final Network network,
+    private Map<CoreHub, Pair<Double, Double>> mapCoreHubsGenerationAndLoadToMinMax(final Network network,
                                                                                     final double margin) {
-        final Map<CoreHub, Pair<Double, Double>> gLByCoreHub = new HashMap<>();
-        coreHubs.stream()
-                .filter(coreHub -> !coreHub.isHvdcHub())
-                .forEach(coreHub -> {
-                    final Double sumGeneration = getGenerationForHub(network, coreHub);
-                    final Double sumLoads = getLoadForHub(network, coreHub);
-                    gLByCoreHub.put(coreHub, Pair.of(-sumLoads - margin, sumGeneration - sumLoads + margin));
-                });
-        return gLByCoreHub;
+        return coreHubs.stream()
+                .filter(not(CoreHub::isHvdcHub))
+                .collect(Collectors.toMap(coreHub -> coreHub, coreHub -> getMinMaxPair(coreHub, network, margin)));
+    }
 
+    private Pair<Double, Double> getMinMaxPair(final CoreHub coreHub,
+                                               final Network network,
+                                               final double margin) {
+        final Double sumGeneration = getGenerationForHub(network, coreHub);
+        final Double sumLoads = getLoadForHub(network, coreHub);
+        return Pair.of(-sumLoads - margin, sumGeneration - sumLoads + margin);
     }
 
     private Double getGenerationForHub(final Network network,
                                        final CoreHub coreHub) {
         return network.getGeneratorStream()
                 .filter(isInCountry(coreHub.country()).and(isConnected()))
-                .map(Generator::getMaxP)
-                .reduce(Double::sum)
-                .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("No generation on network for hub : %s", coreHub.name())));
+                .mapToDouble(Generator::getMaxP)
+                .sum();
     }
 
     private Double getLoadForHub(final Network network,
                                  final CoreHub coreHub) {
         return network.getLoadStream()
                 .filter(isInCountry(coreHub.country()))
-                .map(Load::getP0)
-                .reduce(Double::sum)
-                .orElseThrow(() -> new CoreValidIntradayInvalidDataException(String.format("No load on network for hub : %s", coreHub.name())));
+                .mapToDouble(Load::getP0)
+                .sum();
     }
 
     private boolean isListSmallerThanMax(final List<Vertex> vertices,
